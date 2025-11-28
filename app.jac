@@ -56,3 +56,11 @@ node JobPosting {
     has salary_range: int;
     has role_type: str;
 }
+
+node Certification {
+    has id: str;
+    has name: str;
+    has issurer: str;
+    has skills_tested: str;
+    has level: str;
+}
