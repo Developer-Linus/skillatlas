@@ -64,3 +64,9 @@ node Certification {
     has skills_tested: str;
     has level: str;
 }
+
+ node Industry {
+    has name: str;
+    has top_skills: str;
+    has growth_score: str;
+ }
