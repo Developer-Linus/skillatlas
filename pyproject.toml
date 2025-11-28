@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "byllm>=0.4.7",
+    "jac-client>=0.2.1",
     "jaclang>=0.9.1",
 ]
