@@ -45,5 +45,6 @@ node Course {
     has title: str;
     has provider: str;
     has skills_taught: list[str];
+    has duration: str;
     has difficulty: str;
 }
