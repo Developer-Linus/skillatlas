@@ -48,3 +48,11 @@ node Course {
     has duration: str;
     has difficulty: str;
 }
+
+node JobPosting {
+    has title: str;
+    has location: str;
+    has company: str;
+    has salary_range: int;
+    has role_type: str;
+}
