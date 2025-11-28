@@ -70,3 +70,10 @@ node Certification {
     has top_skills: str;
     has growth_score: str;
  }
+
+ node SkillGap {
+    has skill_name: str;
+    has required_level: str;
+    has current_level: str;
+    has severity(1-5): int;
+ }
