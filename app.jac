@@ -77,3 +77,10 @@ node Certification {
     has current_level: str;
     has severity(1-5): int;
  }
+
+ {
+    node skillcluster {
+        has cluster_name: str;
+        has skills: list[str];
+    }
+ }
