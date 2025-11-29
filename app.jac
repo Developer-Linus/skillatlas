@@ -84,3 +84,12 @@ node Certification {
         has skills: list[str];
     }
  }
+
+ {
+    node trend {
+        has topic:str;
+        has trend_score: int;
+        has affected_skills:str;
+        has affected_roles:str;
+    }
+ }
