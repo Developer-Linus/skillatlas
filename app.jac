@@ -69,7 +69,7 @@ node Certification {
     has name: str;
     has top_skills: str;
     has growth_score: str;
- }
+}
 
  node SkillGap {
     has skill_name: str;
@@ -77,3 +77,17 @@ node Certification {
     has current_level: str;
     has severity(1-5): int;
  }
+
+{
+  node learningpath {
+    has name: str;
+    has steps: list[str];
+    has estimated_time: str;
+    has goal_role: str;
+  }
+
+}
+
+
+
+
