@@ -88,6 +88,14 @@ node Certification {
 
 }
 
+{
+    node matchscore {
+        has score_value: str;
+        has matched_skills: list[str];
+        has missing_skills: list[str];  
+    }
+}
+
 
 
 
