@@ -93,3 +93,10 @@ node Certification {
         has affected_roles:str;
     }
  }
+
+ node learninpath {
+    has name: str;
+    has steps: list[str];
+    has goal_role: str;
+    has estimated_time: str;
+ }
