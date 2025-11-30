@@ -100,3 +100,9 @@ node Certification {
     has goal_role: str;
     has estimated_time: str;
  }
+
+ node matchscore {
+    has score_value: float;
+    has matched_skills: list[str];
+    has missing_skills: list[str];
+ }
