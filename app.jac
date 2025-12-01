@@ -1,8 +1,19 @@
+enum UserRole { ADMIN = "admin", USER = "user" }
+
+enum SkillDifficulty {
+    BEGINNER = "beginner",
+    INTERMEDIATE = "intermediate",
+    ADVANCED = "advanced"
+}
+
+enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
+
 node User {
     has id: str;
     has username: str;
     has email: str;
-    has current_role: str = "";
+    has role: UserRole;
+    has current_position: str = "";
     has target_roles: list[str] = [];
     has experience_years: int = 0;
     has bio: str = "";
@@ -24,7 +35,7 @@ node Skill {
     has name: str;
     has canonical_name: str = "";
     has category: str = "";
-    has difficulty_level: str = "Beginner";
+    has difficulty_level: SkillDifficulty;
     has level_required: int = 0;
     has importance_score: float = 0.0;
 }
@@ -34,9 +45,9 @@ node Skill {
 node Role {
     has id: str;  # internal unique ID
     has name: str;  # display name
+    has seniority_level: SeniorityLevel;  # e.g., "Junior", "Mid", "Senior"
     has description: str = "";  # job description / summary
     has industry: str = "";  # e.g., "Finance", "Tech", "Healthcare"
-    has seniority_level: str = "";  # e.g., "Junior", "Mid", "Senior"
     has average_salary: int;
 }
 
@@ -65,44 +76,40 @@ node Certification {
     has level: str;
 }
 
- node Industry {
+node Industry {
     has name: str;
     has top_skills: str;
     has growth_score: str;
- }
+}
 
- node SkillGap {
+node SkillGap {
     has skill_name: str;
     has required_level: str;
     has current_level: str;
-    has severity(1-5): int;
- }
+    has severity: int;
+}
 
- {
-    node skillcluster {
-        has cluster_name: str;
-        has skills: list[str];
-    }
- }
+node SkillCluster {
+    has cluster_name: str;
+    has skills: list[str];
+}
 
- {
-    node trend {
-        has topic:str;
-        has trend_score: int;
-        has affected_skills:str;
-        has affected_roles:str;
-    }
- }
+node Trend {
+    has topic: str;
+    has trend_score: int;
+    has affected_skills: str;
+    has affected_roles: str;
+}
 
- node learninpath {
+node LearninPath {
     has name: str;
     has steps: list[str];
     has goal_role: str;
     has estimated_time: str;
- }
+}
 
- node matchscore {
+node MatchScore {
     has score_value: float;
     has matched_skills: list[str];
     has missing_skills: list[str];
- }
+}
