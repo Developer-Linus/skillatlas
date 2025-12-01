@@ -39,15 +39,13 @@ node Skill {
     has level_required: int = 0;
     has importance_score: float = 0.0;
 }
-#---------------------------------
-#          ROLE NODE
-#---------------------------------
+
 node Role {
-    has id: str;  # internal unique ID
-    has name: str;  # display name
-    has seniority_level: SeniorityLevel;  # e.g., "Junior", "Mid", "Senior"
-    has description: str = "";  # job description / summary
-    has industry: str = "";  # e.g., "Finance", "Tech", "Healthcare"
+    has id: str;
+    has name: str;
+    has seniority_level: SeniorityLevel;
+    has description: str = "";
+    has industry: str = "";
     has average_salary: int;
 }
 
@@ -113,3 +111,54 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
 }
+# User -> Skill
+edge has_skill {
+    has level: int;
+
+    def update_level(new_level: int) -> None;
+}
+
+# User -> Skill
+edge wants_skill {}
+
+# User -> Role
+edge targets_role {}
+
+# Role -> Skill
+edge requires_skill {
+    has level_required: int;
+
+    def update_required_level(new_level: int) -> None;
+}
+
+# Role -> Industry
+edge in_industry {}
+
+# Course -> Skill
+edge teaches_skill {}
+
+# Course -> Role
+edge prepares_for {}
+
+# Certification -> Role
+edge qualifies_for {}
+
+# Certification -> Skill
+edge covers_skill {}
+
+# JobPosting -> Role
+edge represents_role {}
+
+# JobPosting -> Skill
+edge demands_skill {
+    has importance_score: float;
+}
+
+# Skill -> SkillCluster
+edge belongs_to_cluster {}
+# User -> SkillGap
+edge has_gap {}
+# LearningPath -> Skill
+edge leads_to_skill {}
+# Trend -> Skill/Role
+edge affects {}
