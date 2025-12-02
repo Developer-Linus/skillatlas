@@ -94,7 +94,3 @@ impl requires_skill.update_required_level{
     }
     level_required = new_level;
 }
-
-impl UserManager.manage_user{ }
-# retrieve edges of type has_skill that originate from this user
-# retrieve edges of type has_skill that originate from this user
