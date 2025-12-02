@@ -1,3 +1,7 @@
+import from byllm.llm { Model }
+
+glob llm = Model(model_name="gemini/gemini-2.5-flash", verbose=False);
+
 enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SkillDifficulty {
@@ -10,24 +14,71 @@ enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
 node User {
     has id: str;
-    has username: str;
     has email: str;
     has role: UserRole;
+    has target_roles: list[str];
     has current_position: str = "";
-    has target_roles: list[str] = [];
     has experience_years: int = 0;
     has bio: str = "";
     has completed_courses: list[str] = [];
     has preferred_industries: list[str] = [];
     has learning_progress: dict[str, int] = {};
     has created_at: str = "";
-    has is_private: bool = true;
-    has shared_with: list[str] = [];
+    has is_private  # retrieve edges of type has_skill that originate from this user
+    : bool = true;
+
+    has shared_with: list[str] = [];  # list of edge objects
 
     def add_or_update_skill(skill_name: str, level: int) -> str;
     def add_target_role(role: str) -> str;
-    def remove_target_role(role: str) -> str;
-    def complete_course(course_name: str) -> str;
+    def remove_target_role  # e.to is the node at the other end (Skill)
+    (role: str) -> str;
+
+    def complete_course  # guard: if skill node missing, skip
+    (course_name: str) -> str;
+
+    def get_basic_info()  -> dict[str, str];
+    def get_skills()  -> list[dict];
+    def get_target_roles()  -> list[str];
+    def get_completed_courses()  -> list[str];
+    def get_preferred_industries()  -> list[str];
+    def get_learning_progress()  -> dict[str, int];
+    def summarize_profile()  -> str by llm(
+        method="ReAct",
+        tools=(
+            [
+                self.get_basic_info,
+                self.get_skills,
+                self.get_target_roles,
+                self.get_completed_courses,
+                self.get_preferred_industries,
+                self.get_learning_progress,
+
+            ]
+        )
+    );
+
+    def recommend_roles()  -> list[str] by llm(
+        method="ReAct", tools=([self.get_skills, self.get_learning_progress])
+    );
+
+    can execute with UserManager entry {
+        self.summarize_profile();
+        self.recommend_roles();
+
+        report {
+            "id": self.id,
+            "username": self.username,
+            "current_position": self.current_position,
+            "target_roles": self.target_roles,
+            "experience_years": self.experience_years,
+            "bio": self.bio,
+            "completed_courses": self.completed_courses,
+            "preferred_industries": self.preferred_industries,
+            "learning_progress": self.learning_progress,
+
+        } ;
+    }
 }
 
 node Skill {
@@ -111,6 +162,8 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
 }
+
+# User -> Skill
 # User -> Skill
 edge has_skill {
     has level: int;
@@ -119,11 +172,14 @@ edge has_skill {
 }
 
 # User -> Skill
+# User -> Skill
 edge wants_skill {}
 
 # User -> Role
+# User -> Role
 edge targets_role {}
 
+# Role -> Skill
 # Role -> Skill
 edge requires_skill {
     has level_required: int;
@@ -132,33 +188,55 @@ edge requires_skill {
 }
 
 # Role -> Industry
+# Role -> Industry
 edge in_industry {}
 
+# Course -> Skill
 # Course -> Skill
 edge teaches_skill {}
 
 # Course -> Role
+# Course -> Role
 edge prepares_for {}
 
+# Certification -> Role
 # Certification -> Role
 edge qualifies_for {}
 
 # Certification -> Skill
+# Certification -> Skill
 edge covers_skill {}
 
 # JobPosting -> Role
+# JobPosting -> Role
 edge represents_role {}
 
+# JobPosting -> Skill
 # JobPosting -> Skill
 edge demands_skill {
     has importance_score: float;
 }
 
 # Skill -> SkillCluster
+# Skill -> SkillCluster
 edge belongs_to_cluster {}
+# User -> SkillGap
 # User -> SkillGap
 edge has_gap {}
 # LearningPath -> Skill
+# LearningPath -> Skill
 edge leads_to_skill {}
 # Trend -> Skill/Role
+# Trend -> Skill/Role
 edge affects {}
+
+walker UserManager {
+    """
+    1. Locate.
+    2. Create-if-missing
+    3. Operate
+    """
+    has user_id: str;
+
+    can manage_user with User entry;
+}

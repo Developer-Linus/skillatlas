@@ -1,3 +1,48 @@
+impl User.get_basic_info{
+    return {
+        "id": self.id,
+        "email": self.email,
+        "current_position": self.current_position,
+        "experience_years": self.experience_years,
+        "bio": self.bio
+    };
+}
+
+impl User.get_target_roles{
+    return self.target_roles;
+}
+
+impl User.get_completed_courses{
+    return self.completed_courses;
+}
+
+impl User.get_preferred_industries{
+    return self.preferred_industries;
+}
+
+impl User.get_learning_progress{
+    return self.learning_progress;
+}
+impl User.get_skills{
+            # retrieve edges of type has_skill that originate from this user
+        skill_edges = [self-->(`?has_skill)];   # list of edge objects
+        skills_list = [];
+
+        for e in skill_edges {
+            # e.to is the node at the other end (Skill)
+            # guard: if skill node missing, skip
+            if e.to {
+                skills_list = skills_list + [
+                    {
+                        "name": e.to.name,
+                        "level": e.level
+                    }
+                ];
+            }
+        }
+
+        return skills_list;
+}
 impl User.add_or_update_skill{
     if level < 0 {
         return "Level cannot be negative.";
@@ -44,3 +89,5 @@ impl requires_skill.update_required_level{
     }
     level_required = new_level;
 }
+
+impl UserManager.manage_user{ }
