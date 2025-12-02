@@ -23,26 +23,31 @@ impl User.get_preferred_industries{
 impl User.get_learning_progress{
     return self.learning_progress;
 }
+
 impl User.get_skills{
-            # retrieve edges of type has_skill that originate from this user
-        skill_edges = [self-->(`?has_skill)];   # list of edge objects
-        skills_list = [];
-
-        for e in skill_edges {
-            # e.to is the node at the other end (Skill)
-            # guard: if skill node missing, skip
-            if e.to {
-                skills_list = skills_list + [
-                    {
-                        "name": e.to.name,
-                        "level": e.level
-                    }
-                ];
-            }
+    skill_edges = [self-->(`?has_skill)];  # list of edge objects
+    skills_list = [];
+    for e in skill_edges {
+        # e.to is the node at the other end (Skill)
+        # guard: if skill node missing, skip
+        if e.to {
+            skills_list = skills_list + [{"name": e.to.name, "level": e.level}];
         }
-
-        return skills_list;
+    }
+    return skills_list;
 }
+
+impl User.get_profile_snapshot{
+    return {
+        "basic_info": self.get_basic_info(),
+        "skills": self.get_skills(),
+        "target_roles": self.get_target_roles(),
+        "completed_courses": self.get_completed_courses(),
+        "preferred_industries": self.get_preferred_industries(),
+        "learning_progress": self.get_learning_progress()
+    };
+}
+
 impl User.add_or_update_skill{
     if level < 0 {
         return "Level cannot be negative.";
@@ -91,3 +96,5 @@ impl requires_skill.update_required_level{
 }
 
 impl UserManager.manage_user{ }
+# retrieve edges of type has_skill that originate from this user
+# retrieve edges of type has_skill that originate from this user

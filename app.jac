@@ -1,4 +1,5 @@
 import from byllm.llm { Model }
+import time;
 
 glob llm = Model(model_name="gemini/gemini-2.5-flash", verbose=False);
 
@@ -23,30 +24,32 @@ node User {
     has completed_courses: list[str] = [];
     has preferred_industries: list[str] = [];
     has learning_progress: dict[str, int] = {};
-    has created_at: str = "";
+    has created_at: str = time.now();
     has is_private  # retrieve edges of type has_skill that originate from this user
     : bool = true;
 
     has shared_with: list[str] = [];  # list of edge objects
+    # list of edge objects
 
+    # Mutation abilities
     def add_or_update_skill(skill_name: str, level: int) -> str;
     def add_target_role(role: str) -> str;
-    def remove_target_role  # e.to is the node at the other end (Skill)
-    (role: str) -> str;
-
-    def complete_course  # guard: if skill node missing, skip
-    (course_name: str) -> str;
-
+    def remove_target_role(role: str) -> str;
+    def complete_course(course_name: str) -> str;
+    # Readonly getters
     def get_basic_info()  -> dict[str, str];
-    def get_skills()  -> list[dict];
+    def get_skills()  -> list[dict[str, any]];
     def get_target_roles()  -> list[str];
     def get_completed_courses()  -> list[str];
     def get_preferred_industries()  -> list[str];
     def get_learning_progress()  -> dict[str, int];
+    def get_profile_snapshot()  -> dict[str, any];
+    # LLM functions
     def summarize_profile()  -> str by llm(
         method="ReAct",
         tools=(
             [
+                self.get_profile_snapshot,
                 self.get_basic_info,
                 self.get_skills,
                 self.get_target_roles,
@@ -61,24 +64,6 @@ node User {
     def recommend_roles()  -> list[str] by llm(
         method="ReAct", tools=([self.get_skills, self.get_learning_progress])
     );
-
-    can execute with UserManager entry {
-        self.summarize_profile();
-        self.recommend_roles();
-
-        report {
-            "id": self.id,
-            "username": self.username,
-            "current_position": self.current_position,
-            "target_roles": self.target_roles,
-            "experience_years": self.experience_years,
-            "bio": self.bio,
-            "completed_courses": self.completed_courses,
-            "preferred_industries": self.preferred_industries,
-            "learning_progress": self.learning_progress,
-
-        } ;
-    }
 }
 
 node Skill {
@@ -165,12 +150,16 @@ node MatchScore {
 
 # User -> Skill
 # User -> Skill
+# User -> Skill
+# User -> Skill
 edge has_skill {
     has level: int;
 
     def update_level(new_level: int) -> None;
 }
 
+# User -> Skill
+# User -> Skill
 # User -> Skill
 # User -> Skill
 edge wants_skill {}
@@ -240,3 +229,4 @@ walker UserManager {
 
     can manage_user with User entry;
 }
+# retrieve edges of type has_skill that originate from this user
