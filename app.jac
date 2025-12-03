@@ -1,3 +1,7 @@
+import from byllm.lib { Model }
+
+glob llm = Model(model_name="gemini/gemini-2.5-flash", verbose=False);
+
 enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SkillDifficulty {
@@ -10,32 +14,42 @@ enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
 node User {
     has id: str;
-    has username: str;
     has email: str;
     has role: UserRole;
+    has target_roles: list[str];
     has current_position: str = "";
-    has target_roles: list[str] = [];
     has experience_years: int = 0;
     has bio: str = "";
     has completed_courses: list[str] = [];
     has preferred_industries: list[str] = [];
     has learning_progress: dict[str, int] = {};
     has created_at: str = "";
-    has is_private: bool = true;
-    has shared_with: list[str] = [];
+    has is_private: bool = True;
+    has shared_with: list[User] = [];  # list of edge objects
 
-    def add_or_update_skill(skill_name: str, level: int) -> str;
+    def add_skill(skill_name: str, level: int) -> str;
+    def update_skill(skill_name: str, level: int) -> str;
     def add_target_role(role: str) -> str;
     def remove_target_role(role: str) -> str;
     def complete_course(course_name: str) -> str;
+    def get_basic_info()  -> dict[str, str];
+    def get_skills()  -> list[dict[str, any]];
+    def get_target_roles()  -> list[str];
+    def get_completed_courses()  -> list[str];
+    def get_preferred_industries()  -> list[str];
+    def get_learning_progress()  -> dict[str, int];
+    def get_profile_snapshot()  -> dict[str, any];
+    def summarize_profile()  -> str by llm(
+        method="ReAct", tools=([self.get_profile_snapshot])
+    );
 }
 
 node Skill {
     has id: str;
     has name: str;
+    has difficulty_level: SkillDifficulty;
     has canonical_name: str = "";
     has category: str = "";
-    has difficulty_level: SkillDifficulty;
     has level_required: int = 0;
     has importance_score: float = 0.0;
 }
@@ -43,10 +57,10 @@ node Skill {
 node Role {
     has id: str;
     has name: str;
+    has average_salary: int;
     has seniority_level: SeniorityLevel;
     has description: str = "";
     has industry: str = "";
-    has average_salary: int;
 }
 
 node Course {
@@ -55,7 +69,7 @@ node Course {
     has provider: str;
     has skills_taught: list[str];
     has duration: str;
-    has difficulty: str;
+    has course_difficulty: str;
 }
 
 node JobPosting {
@@ -111,57 +125,47 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
     has explanation: str;
+    has explanation: str;
 }
-# User -> Skill
+
 edge has_skill {
     has level: int;
 
     def update_level(new_level: int) -> None;
 }
 
-# User -> Skill
 edge wants_skill {}
 
-# User -> Role
 edge targets_role {}
 
-# Role -> Skill
 edge requires_skill {
     has level_required: int;
 
     def update_required_level(new_level: int) -> None;
 }
 
-# Role -> Industry
 edge in_industry {}
 
-# Course -> Skill
 edge teaches_skill {}
 
-# Course -> Role
 edge prepares_for {}
 
-# Certification -> Role
 edge qualifies_for {}
 
-# Certification -> Skill
 edge covers_skill {}
 
-# JobPosting -> Role
 edge represents_role {}
 
-# JobPosting -> Skill
 edge demands_skill {
     has importance_score: float;
 }
 
-# Skill -> SkillCluster
 edge belongs_to_cluster {}
-# User -> SkillGap
+
 edge has_gap {}
-# LearningPath -> Skill
+
 edge leads_to_skill {}
-# Trend -> Skill/Role
+
 edge affects {}
 # User -> Course/Certification
 edge enrolled_in {
@@ -171,4 +175,93 @@ edge enrolled_in {
     def update_progress(new_progress: int) -> None {
         self.progress = new_progress;
     }
+}
+
+edge enrolled_in {
+    has progress: float;
+    has started_at: str;
+    has completed_at: str;
+}
+
+edge aspires_to {}
+
+edge interested_in_skill {}
+
+walker ProfileManager {
+    has user_id: str;
+
+    def get_user()  -> User {
+        return [root-->(`?User:id==self.user_id)][0];
+    }
+
+    def get_profile_snapshot()  -> dict[str, any] {
+        return self.get_user().get_profile_snapshot();
+    }
+
+    def summarize_profile()  -> str by llm(
+        method="ReAct", tools=([self.get_profile_snapshot])
+    );
+
+    can execute with entry {
+        snapshot = self.get_profile_snapshot();
+        summary = self.summarize_profile();
+        report {
+            "user_id": self.user_id,
+            "profile_snapshot": snapshot,
+            "profile_summary": summary
+        } ;
+    }
+}
+
+with entry {
+    skill_python = Skill(
+        id="s1",
+        name="Python",
+        level_required=1,
+        difficulty_level=SkillDifficulty.BEGINNER.value
+    );
+    root ++> skill_python;
+
+    skill_ml = Skill(
+        id="s2",
+        name="Machine Learning",
+        level_required=2,
+        difficulty_level=SkillDifficulty.INTERMEDIATE.value
+    );
+    root ++> skill_ml;
+
+    user1 = User(
+        id="u1",
+        email="alice@example.com",
+        role=UserRole.USER.value,
+        target_roles=["Mid Data Analyst"],
+        current_position="Junior Data Analyst",
+        experience_years=1,
+        bio="Passionate about data-driven insights and predictive modeling.",
+        completed_courses=["Intro to Data Analysis", "Python for Data Science"],
+        preferred_industries=["Finance", "Healthcare"],
+        learning_progress={"Python": 4, "Machine Learning": 2, "SQL": 3}
+    );
+    root ++> user1;
+
+    # Add skills to user
+    user1.add_skill("Python", 4);
+    user1.add_skill("Machine Learning", 2);
+    user1.add_skill("SQL", 3);
+    user1.update_skill("Python", 5);
+
+    # Create a role
+    role_ds = Role(
+        id="r1",
+        name="Data Scientist",
+        seniority_level=SeniorityLevel.JUNIOR.value,
+        average_salary=60000
+    );
+    root ++> role_ds;
+
+    # Role → Skill required edges
+    role_ds +>: requires_skill(level_required=1) :+> skill_python;
+    role_ds +>: requires_skill(level_required=2) :+> skill_ml;
+
+    root spawn ProfileManager(user_id="u1");
 }

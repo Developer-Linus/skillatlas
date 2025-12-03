@@ -1,9 +1,79 @@
-impl User.add_or_update_skill{
+impl User.get_basic_info{
+    return {
+        "id": self.id,
+        "email": self.email,
+        "current_position": self.current_position,
+        "experience_years": self.experience_years,
+        "bio": self.bio
+    };
+}
+
+impl User.get_target_roles{
+    return self.target_roles;
+}
+
+impl User.get_completed_courses{
+    return self.completed_courses;
+}
+
+impl User.get_preferred_industries{
+    return self.preferred_industries;
+}
+
+impl User.get_learning_progress{
+    return self.learning_progress;
+}
+
+impl User.get_skills{
+    skill_nodes = [self-->(`?Skill)];
+    skills_list = [];
+    for s in skill_nodes {
+        skills_list += [{"id": s.id, "name": s.name,}];
+    }
+    return skills_list;
+}
+
+impl User.get_profile_snapshot{
+    return {
+        "basic_info": self.get_basic_info(),
+        "skills": self.get_skills(),
+        "target_roles": self.get_target_roles(),
+        "completed_courses": self.get_completed_courses(),
+        "preferred_industries": self.get_preferred_industries(),
+        "learning_progress": self.get_learning_progress()
+    };
+}
+
+impl User.add_skill{
     if level < 0 {
         return "Level cannot be negative.";
     }
+    skill_nodes = [root-->(`?Skill:name==skill_name)];
+    if not skill_nodes {
+        return f"Skill node {skill_name} does not exist. Create it first.";
+    }
+    skill_node = skill_nodes[0];
+    self +>: has_skill(level=level) :+> skill_node;
     self.learning_progress[skill_name] = level;
-    return f"Skill '{skill_name}' set to level {level}.";
+    return f"Skill {skill_name} added with level {level}.";
+}
+
+impl User.update_skill{
+    if level < 0 {
+        return "Level cannot be negative.";
+    }
+    skill_nodes = [root-->(`?Skill:name==skill_name)];
+    if not skill_nodes {
+        return f"Skill node {skill_name} does not exist.";
+    }
+    skill_node = skill_nodes[0];
+    existing_edges = [self->:has_skill:->skill_node];
+    if not existing_edges {
+        return f"Skill {skill_name} is not added yet. Use add_skill instead.";
+    }
+    existing_edges[0].level = level;
+    self.learning_progress[skill_name] = level;
+    return f"Skill {skill_name} updated to level {level}";
 }
 
 impl User.add_target_role{
@@ -44,3 +114,62 @@ impl requires_skill.update_required_level{
     }
     level_required = new_level;
 }
+
+sem MatchScore. score_value= """
+How close the user is to being ready for the role right now.
+• 0.90–1.00 = ready to apply or already over-qualified
+• 0.75–0.89 = very strong candidate, minor upskilling needed
+• 0.50–0.74 = decent foundation, needs moderate work
+• 0.25–0.49 = significant gaps
+• 0.00–0.24 = almost no overlap
+""";
+
+sem MatchScore. matched_skills= """
+Skill names where user_level ≥ role_required_level
+""";
+
+sem MatchScore. missing_skills= """"
+Skill names where either:
+– user has no record of the skill, or
+– user_level < role_required_level
+""";
+
+sem MatchScore. explanation= """
+One-sentence reasoning that a career coach would give the user
+""";
+
+sem ProfileManager. summarize_profile= """
+You are given a user profile snapshot in dictionary form. 
+Write a single, concise paragraph summary that includes:
+- Current position and years of experience.
+- Key skills with levels.
+- Completed courses and ongoing learning progress.
+- Target roles or career goals.
+- Preferred industries if any.
+
+Guidelines:
+- Keep it factual and based only on the snapshot data.
+- Do not create opinions or add extra information.
+- Combine all points into natural prose; avoid lists or bullets.
+- Be concise and clear.
+
+Example:
+For a user with the following snapshot:
+{
+    "basic_info": {
+        "current_position": "Junior Data Analyst",
+        "experience_years": 0
+    },
+    "skills": [
+        {"name": "Python", "level": 3},
+        {"name": "Machine Learning", "level": 1}
+    ],
+    "completed_courses": [],
+    "learning_progress": {"Python": 3, "Machine Learning": 1},
+    "target_roles": ["Mid Data Analyst"],
+    "preferred_industries": []
+}
+
+The example summary paragraph can be:
+"The user is currently a Junior Data Analyst with no prior work experience. They have foundational skills in Python (level 3) and introductory knowledge in Machine Learning (level 1). They are actively progressing in Python and Machine Learning and are targeting roles as a Mid Data Analyst. They have not completed any formal courses yet and have no specific preferred industries."
+""";
