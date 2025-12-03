@@ -26,12 +26,11 @@ node User {
     has created_at: str = "";
     has is_private: bool = True;
     has shared_with: list[User] = [];  # list of edge objects
-    # list of edge objects
+
     def add_or_update_skill(
         skill_name  # e.to is the node at the other end (Skill)
         : str,
         level: int
-        # e.to is the node at the other end (Skill)
     ) -> str;
 
     def add_target_role(role: str) -> str;
@@ -67,10 +66,10 @@ node Role {
     has description: str = "";
     has industry: str = "";
 
-    def get_required_skills()  -> list[dict[str, any]] {
+    def get_required_skills()  -> list[dict] {
         return [
-            {"skill_name": edge.to.name, "level_required": edge.level_required}
-            for edge in [self-->(`?requires_skill)]
+            {"skill_name": edge.to_node.name, "level_required": edge.level_required}
+            for edge in [here->:requires_skill:->]
         ];
     }
 }
@@ -104,12 +103,8 @@ node Industry {
     has name: str;
     has top_skills: str;
     has growth_score: str;
-}  # retrieve edges of type has_skill that originate from this user
+}
 
-# retrieve edges of type has_skill that originate from this user
-
-# retrieve edges of type has_skill that originate from this user
-# retrieve edges of type has_skill that originate from this user
 node SkillGap {
     has skill_name: str;
     has required_level: str;
@@ -140,6 +135,7 @@ node MatchScore {
     has score_value: float;
     has matched_skills: list[str];
     has missing_skills: list[str];
+    has explanation: str;
 }
 
 edge has_skill {
@@ -182,65 +178,210 @@ edge leads_to_skill {}
 
 edge affects {}
 
-walker UserManager {
+edge enrolled_in {
+    has progress: float;
+    has started_at: str;
+    has completed_at: str;
+}
+
+edge aspires_to {}
+
+edge interested_in_skill {}
+
+node Memory {
+    has sessions: list = [];
+
+    def get_or_create_session(user_id: str) -> Session {
+        # Try to find existing session
+        session_list = [
+            s
+            for s in self.sessions
+            if s.user_id == user_id
+        ];
+        if session_list {
+            return session_list[0];
+        }
+
+        # If none exists, create a new one
+        # If none exists, create a new one
+        new_session = Session(user_id=user_id);
+        self.sessions = self.sessions + [new_session];
+        return new_session;
+    }
+
+    def list_sessions()  -> list[dict] {
+        return [
+            {
+                "user_id": s.user_id,
+                "created_at": s.created_at,
+                "history_length": len(s.history)
+            } for s in self.sessions
+        ];
+    }
+}
+
+node Session {
+    has user_id: str;
+    has history: list[str] = [];
+    has created_at: str = get_current_datetime();
+
+    def add_history(entry: str) {
+        self.history = self.history + [entry];
+    }
+
+    def get_history(last_n: int = 10) -> str {
+        # Return the last `last_n` entries joined by newline
+        # Return the last `last_n` entries joined by newline
+        return "\n".join(self.history[-last_n:]);
+    }
+
+    def snapshot()  -> str by llm(method="ReAct", tools=([self.get_history]));
+}
+#-------------------------
+#-------------------------
+#   SessionManager Walker
+#   SessionManager Walker
+#-------------------------
+#-------------------------
+walker SessionManager {
+    has user_id: str = "";
+
+    # No auth for now
+    # No auth for now
+    obj __specs__ {
+        static has auth: bool = False;
+    }
+
+    can get_or_create_session with `root entry {
+        # Ensure memory node exists
+        # Ensure memory node exists
+        memory_list = [root-->(`?Memory)];
+        if not memory_list {
+            memory = root ++> Memory();
+        } else {
+            memory = memory_list[0];
+        }
+
+        # Get or create session in one call
+        # Get or create session in one call
+        session = memory.get_or_create_session(self.user_id);
+
+        # Return session for agent usage
+        # Return session for agent usage
+        report session ;
+    }
+}
+
+enum NavigatorAgents {
+    CAREER_ENGINE = "CareerEngine",
+    LEARNING_RECOMMENDER = "LearningRecommender",
+    PROFILE_MANAGER = "ProfileManager",
+}
+
+walker smart_career_navigator {
+    has action: str;
+    has user_id: str;
+    has session_id: str;
+
+    obj __specs__ {
+        static has auth: bool = False;
+    }
+
+    # LLM-driven routing function
+    # LLM-driven routing function
+    def route_to_agent(action: str, history: str) -> NavigatorAgents by llm(
+        method="ReAct"
+    );
+
+    can execute with `root entry;
+}
+
+node ProfileManager {
     has user_id: str;
 
+    # -------------------------
+    # -------------------------
+    # Helper: Fetch user node
+    # Helper: Fetch user node
+    # -------------------------
+    # -------------------------
     def get_user()  -> User {
         return [root-->(`?User:id==self.user_id)][0];
     }
 
-    def semantic_role_match(
-        user_skills: list[dict], role: Role, target_roles: list[str]
-    ) -> MatchScore by llm(
-        method="ReAct",
-        tools=(
-            [
-                User.get_skills,
-                User.get_target_roles,
-                User.get_profile_snapshot,
-                Role.get_required_skills
-            ]
-        )
+    # -------------------------
+    # -------------------------
+    # Read-only snapshot for LLM or other agents
+    # Read-only snapshot for LLM or other agents
+    # -------------------------
+    # -------------------------
+    def get_profile_snapshot()  -> dict[str, any] {
+        return self.get_user().get_profile_snapshot();
+    }
+
+    # -------------------------
+    # -------------------------
+    # Summarize user profile using LLM
+    # Summarize user profile using LLM
+    # -------------------------
+    # -------------------------
+    def summarize_profile()  -> str by llm(
+        method="ReAct", tools=([self.get_profile_snapshot])
     );
 
-    def recommend_roles()  -> list[MatchScore] {
-        user = self.get_user();
-        user_skills = user.get_skills();
-        user_targets = user.get_target_roles();
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # LLM-driven read-only orchestrator
+    # LLM-driven read-only orchestrator
+    # LLM-driven read-only orchestrator
+    # LLM-driven read-only orchestrator
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    def route_and_run(action: str, history: str) -> str by llm(
+        method="ReAct", tools=([self.summarize_profile])
+    );
 
-        roles = [root-->(`?Role)];
-        scores = [];
-        for r in roles {
-            score = self.semantic_role_match(user_skills, r, user_targets);
-            scores = scores + [score];
-        }
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # Entry point called by supervisor agent
+    # Entry point called by supervisor agent
+    # Entry point called by supervisor agent
+    # Entry point called by supervisor agent
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    # -------------------------
+    can execute with smart_career_navigator entry {
+        session = visitor.session;
 
-        scores.sort(key=lambda  x: MatchScore: x.score_value);
-        scores = scores[::-1];
-        return scores;
-    }
+        # Get LLM summary
+        # Get LLM summary
+        # Get LLM summary
+        # Get LLM summary
+        response = self.route_and_run(visitor.action, session.get_history());
 
-    def summarize_user_profile()  -> str {
-        return self.get_user().summarize_profile();
-    }
+        # Append interaction to session
+        # Append interaction to session
+        # Append interaction to session
+        # Append interaction to session
+        session.add_history("user: " + visitor.action + "\nai: " + response);
 
-    def add_skill(skill_name: str, level: int) -> str {
-        return self.get_user().add_or_update_skill(skill_name, level);
-    }
-
-    def complete_course(course_name: str) -> str {
-        return self.get_user().complete_course(course_name);
-    }
-
-    can execute with entry {
-        user = self.get_user();
-        profile_summary = self.summarize_user_profile();
-        role_recommendations = self.recommend_roles();
-
+        # Return structured report to supervisor
+        # Return structured report to supervisor
+        # Return structured report to supervisor
+        # Return structured report to supervisor
         report {
-            "user_id": user.id,
-            "profile_summary": profile_summary,
-            "role_recommendations": role_recommendations
+            "user_id": self.user_id,
+            "session_id": jid(visitor.session),
+            "created_at": visitor.session.created_at,
+            "profile_snapshot": self.get_profile_snapshot(),
+            "response_summary": response
         } ;
     }
 }
@@ -263,19 +404,64 @@ with entry {
     root ++> skill_ml;
 
     # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
+    # Create a user
     user1 = User(
         id="u1",
         email="alice@example.com",
         role=UserRole.USER.value,
-        target_roles=["AI Engineer"],
-        current_position="Junior Analyst"
+        target_roles=["Mid Data Analyst"],
+        current_position="Junior Data Analyst"
     );
     root ++> user1;
 
     # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
+    # Add skills to user
     user1.add_or_update_skill("Python", 3);
     user1.add_or_update_skill("Machine Learning", 1);
 
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
+    # Create a role
     # Create a role
     role_ds = Role(
         id="r1",
@@ -286,30 +472,21 @@ with entry {
     root ++> role_ds;
 
     # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
+    # Role → Skill required edges
     role_ds +>: requires_skill(level_required=1) :+> skill_python;
     role_ds +>: requires_skill(level_required=2) :+> skill_ml;
-
-    # Run walker
-    root spawn UserManager(user_id="u1");
 }
-
-sem UserManager. semantic_role_match= """
-Compute a semantic match score between a user and a role using LLM reasoning.
-
-Steps:
-1. Get user's skills from User.get_skills()
-2. Get user's target roles from User.get_target_roles()
-3. Get user's profile from User.get_profile_snapshot()
-4. Get role's required skills from Role.get_required_skills()
-5. For each required skill:
-    - If user has the skill at the required level or higher, add to matched_skills
-    - Otherwise, add to missing_skills
-6. Compute score_value = len(matched_skills) / total number of required skills
-7. RETURN JSON ONLY in this exact structure:
-{
-    "score_value": float,
-    "matched_skills": [list of matched skill names],
-    "missing_skills": [list of missing skill names]
-}
-Ensure all fields are always present, even if empty.
-""";
