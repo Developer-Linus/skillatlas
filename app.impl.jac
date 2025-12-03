@@ -173,12 +173,3 @@ For a user with the following snapshot:
 The example summary paragraph can be:
 "The user is currently a Junior Data Analyst with no prior work experience. They have foundational skills in Python (level 3) and introductory knowledge in Machine Learning (level 1). They are actively progressing in Python and Machine Learning and are targeting roles as a Mid Data Analyst. They have not completed any formal courses yet and have no specific preferred industries."
 """;
-# Update learning progress
-# Update learning progress
-# Update learning progress
-# Update learning progress
-
-# Find the Skill node
-# Find the Skill node
-# Find the Skill node
-# Find the Skill node

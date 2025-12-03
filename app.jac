@@ -192,10 +192,6 @@ walker ProfileManager {
         method="ReAct", tools=([self.get_profile_snapshot])
     );
 
-    def route_and_run(action: str, history: str) -> str by llm(
-        method="ReAct", tools=([self.summarize_profile])
-    );
-
     can execute with entry {
         snapshot = self.get_profile_snapshot();
         summary = self.summarize_profile();
