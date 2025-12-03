@@ -110,6 +110,7 @@ node MatchScore {
     has score_value: float;
     has matched_skills: list[str];
     has missing_skills: list[str];
+    has explanation: str;
 }
 # User -> Skill
 edge has_skill {
@@ -162,3 +163,12 @@ edge has_gap {}
 edge leads_to_skill {}
 # Trend -> Skill/Role
 edge affects {}
+# User -> Course/Certification
+edge enrolled_in {
+    has progress: int = 0; 
+    has started_at: str = get_current_datetime();
+
+    def update_progress(new_progress: int) -> None {
+        self.progress = new_progress;
+    }
+}
