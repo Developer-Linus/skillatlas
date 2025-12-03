@@ -25,14 +25,10 @@ impl User.get_learning_progress{
 }
 
 impl User.get_skills{
-    skill_edges = [self-->(`?has_skill)];  # list of edge objects
+    skill_nodes = [self-->(`?Skill)];
     skills_list = [];
-    for e in skill_edges {
-        # e.to is the node at the other end (Skill)
-        # guard: if skill node missing, skip
-        if e.to {
-            skills_list = skills_list + [{"name": e.to.name, "level": e.level}];
-        }
+    for s in skill_nodes {
+        skills_list += [{"id": s.id, "name": s.name,}];
     }
     return skills_list;
 }
@@ -48,12 +44,36 @@ impl User.get_profile_snapshot{
     };
 }
 
-impl User.add_or_update_skill{
+impl User.add_skill{
     if level < 0 {
         return "Level cannot be negative.";
     }
+    skill_nodes = [root-->(`?Skill:name==skill_name)];
+    if not skill_nodes {
+        return f"Skill node {skill_name} does not exist. Create it first.";
+    }
+    skill_node = skill_nodes[0];
+    self +>: has_skill(level=level) :+> skill_node;
     self.learning_progress[skill_name] = level;
-    return f"Skill '{skill_name}' set to level {level}.";
+    return f"Skill {skill_name} added with level {level}.";
+}
+
+impl User.update_skill{
+    if level < 0 {
+        return "Level cannot be negative.";
+    }
+    skill_nodes = [root-->(`?Skill:name==skill_name)];
+    if not skill_nodes {
+        return f"Skill node {skill_name} does not exist.";
+    }
+    skill_node = skill_nodes[0];
+    existing_edges = [self->:has_skill:->skill_node];
+    if not existing_edges {
+        return f"Skill {skill_name} is not added yet. Use add_skill instead.";
+    }
+    existing_edges[0].level = level;
+    self.learning_progress[skill_name] = level;
+    return f"Skill {skill_name} updated to level {level}";
 }
 
 impl User.add_target_role{
@@ -95,45 +115,6 @@ impl requires_skill.update_required_level{
     level_required = new_level;
 }
 
-impl smart_career_navigator.execute{
-    memory_list = [root-->(`?Memory)];
-    if not memory_list {
-        memory = root ++> Memory();
-    } else {
-        memory = memory_list[0];
-    }
-    if not self.session_id {
-        session = memory.get_or_create_session(self.user_id);
-    } else {
-        self.session = & (self.session_id);
-    }
-    routed_agent = self.route_to_agent(self.action, self.session.get_history());
-    node_cls = globals().get(routed_agent.value, "");
-    if not node_cls {
-        report {
-            "user_id": self.user_id,
-            "response": "Sorry, I couldn't determine the agent to handle this request."
-        } ;
-        return;
-    }
-    node_inst = node_cls(
-        user_id=self.user_id, action=self.action, session=self.session
-    );
-    visit [-->(`?node_cls)] else {
-        attached_node = here ++> node_inst;
-        visit attached_node;
-    }
-    self.session.add_history("user: " + self.action);
-    report {
-        "user_id": self.user_id,
-        "session_id": jid(self.session),
-        "created_at": self.session.created_at,
-        "routed_agent": routed_agent,
-        "session_history": self.session.get_history(),
-
-    } ;
-}
-
 sem MatchScore. score_value= """
 How close the user is to being ready for the role right now.
 • 0.90–1.00 = ready to apply or already over-qualified
@@ -156,3 +137,48 @@ Skill names where either:
 sem MatchScore. explanation= """
 One-sentence reasoning that a career coach would give the user
 """;
+
+sem ProfileManager. summarize_profile= """
+You are given a user profile snapshot in dictionary form. 
+Write a single, concise paragraph summary that includes:
+- Current position and years of experience.
+- Key skills with levels.
+- Completed courses and ongoing learning progress.
+- Target roles or career goals.
+- Preferred industries if any.
+
+Guidelines:
+- Keep it factual and based only on the snapshot data.
+- Do not create opinions or add extra information.
+- Combine all points into natural prose; avoid lists or bullets.
+- Be concise and clear.
+
+Example:
+For a user with the following snapshot:
+{
+    "basic_info": {
+        "current_position": "Junior Data Analyst",
+        "experience_years": 0
+    },
+    "skills": [
+        {"name": "Python", "level": 3},
+        {"name": "Machine Learning", "level": 1}
+    ],
+    "completed_courses": [],
+    "learning_progress": {"Python": 3, "Machine Learning": 1},
+    "target_roles": ["Mid Data Analyst"],
+    "preferred_industries": []
+}
+
+The example summary paragraph can be:
+"The user is currently a Junior Data Analyst with no prior work experience. They have foundational skills in Python (level 3) and introductory knowledge in Machine Learning (level 1). They are actively progressing in Python and Machine Learning and are targeting roles as a Mid Data Analyst. They have not completed any formal courses yet and have no specific preferred industries."
+""";
+# Update learning progress
+# Update learning progress
+# Update learning progress
+# Update learning progress
+
+# Find the Skill node
+# Find the Skill node
+# Find the Skill node
+# Find the Skill node
