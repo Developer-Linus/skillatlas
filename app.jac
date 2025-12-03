@@ -125,7 +125,6 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
     has explanation: str;
-    has explanation: str;
 }
 
 edge has_skill {
@@ -169,18 +168,12 @@ edge leads_to_skill {}
 edge affects {}
 # User -> Course/Certification
 edge enrolled_in {
-    has progress: int = 0; 
+    has progress: int = 0;
     has started_at: str = get_current_datetime();
 
     def update_progress(new_progress: int) -> None {
         self.progress = new_progress;
     }
-}
-
-edge enrolled_in {
-    has progress: float;
-    has started_at: str;
-    has completed_at: str;
 }
 
 edge aspires_to {}
