@@ -1,6 +1,4 @@
-import from PdfReader {
-    PyPDF2
-}
+import from PdfReader { PyPDF2 }
 import io;
 import magic;
 import pytesseract;
