@@ -1,6 +1,6 @@
 import from byllm.lib { Model }
+import from core.llm { llm }
 import from models.models { User }
-glob llm = Model(model_name="gemini/gemini-2.5-flash", verbose=False);
 walker ProfileManager {
     has user_id: str;
 
@@ -16,13 +16,5 @@ walker ProfileManager {
         method="ReAct", tools=([self.get_profile_snapshot])
     );
 
-    can execute with entry {
-        snapshot = self.get_profile_snapshot();
-        summary = self.summarize_profile();
-        report {
-            "user_id": self.user_id,
-            "profile_snapshot": snapshot,
-            "profile_summary": summary
-        } ;
-    }
+    can execute with `root entry;
 }
