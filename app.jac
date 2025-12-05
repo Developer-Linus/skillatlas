@@ -70,6 +70,6 @@ with entry {
     role_ds +>: requires_skill(level_required=1) :+> skill_python;
     role_ds +>: requires_skill(level_required=2) :+> skill_ml;
 
-    # root spawn ProfileManager(user_id="u1");
+    root spawn ProfileManager(user_id="u1");
     root spawn ResumeParser(uploaded_path="./sample_resumes/john_resume.pdf");
 }
