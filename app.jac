@@ -1,4 +1,4 @@
-import from byllm.lib { Model }
+import from core.llm { llm }
 import from models.models {
     User,
     Skill,
@@ -18,8 +18,7 @@ import from models.models {
 }
 import from edges.edges { has_skill, requires_skill }
 import from walkers.profile_manager { ProfileManager }
-
-glob llm = Model(model_name="gemini/gemini-2.5-flash", verbose=False);
+import from walkers.resume_parser { ResumeParser }
 
 with entry {
     skill_python = Skill(
@@ -71,5 +70,6 @@ with entry {
     role_ds +>: requires_skill(level_required=1) :+> skill_python;
     role_ds +>: requires_skill(level_required=2) :+> skill_ml;
 
-    root spawn ProfileManager(user_id="u1");
+    # root spawn ProfileManager(user_id="u1");
+    root spawn ResumeParser(uploaded_path="./sample_resumes/john_resume.pdf");
 }
