@@ -1,5 +1,12 @@
+enum SkillDifficulty {
+    BEGINNER = "beginner",
+    INTERMEDIATE = "intermediate",
+    ADVANCED = "advanced"
+}
+
 edge has_skill {
-    has level: int;
+    has required_level: int;
+    has importance_score: float;
 
     def update_level(new_level: int) -> None;
 }
@@ -9,7 +16,7 @@ edge wants_skill {}
 edge targets_role {}
 
 edge requires_skill {
-    has level_required: int;
+    has le: int;
 
     def update_required_level(new_level: int) -> None;
 }
@@ -22,7 +29,9 @@ edge prepares_for {}
 
 edge qualifies_for {}
 
-edge covers_skill {}
+edge covers_skill {
+    has difficulty_level: SkillDifficulty;
+}
 
 edge represents_role {}
 
@@ -33,8 +42,6 @@ edge demands_skill {
 edge belongs_to_cluster {}
 
 edge has_gap {}
-
-edge leads_to_skill {}
 
 edge affects {}
 # User -> Course/Certification

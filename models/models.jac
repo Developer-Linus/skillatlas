@@ -1,12 +1,6 @@
 import from edges.edges { has_skill }
 enum UserRole { ADMIN = "admin", USER = "user" }
 
-enum SkillDifficulty {
-    BEGINNER = "beginner",
-    INTERMEDIATE = "intermediate",
-    ADVANCED = "advanced"
-}
-
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
 node User {
@@ -23,6 +17,7 @@ node User {
     has created_at: str = "";
     has is_private: bool = True;
     has shared_with: list[User] = [];  # list of edge objects
+      # list of edge objects
 
     def add_skill(skill_name: str, level: int) -> str;
     def update_skill(skill_name: str, level: int) -> str;
@@ -44,11 +39,8 @@ node User {
 node Skill {
     has id: str;
     has name: str;
-    has difficulty_level: SkillDifficulty;
     has canonical_name: str = "";
     has category: str = "";
-    has level_required: int = 0;
-    has importance_score: float = 0.0;
 }
 
 node Role {
