@@ -5,8 +5,7 @@ enum SkillDifficulty {
 }
 
 edge has_skill {
-    has required_level: int;
-    has importance_score: float;
+    has level: int;
 
     def update_level(new_level: int) -> None;
 }
@@ -16,7 +15,7 @@ edge wants_skill {}
 edge targets_role {}
 
 edge requires_skill {
-    has le: int;
+    has required_level: int;
 
     def update_required_level(new_level: int) -> None;
 }

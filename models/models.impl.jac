@@ -123,3 +123,17 @@ Skill names where either:
 sem MatchScore. explanation= """
 One-sentence reasoning that a career coach would give the user
 """;
+
+sem Skill. name= """
+The display name of the skill as extracted from the user’s profile or resume.
+It should be human-readable and may include variations.
+""";
+
+sem Skill. canonical_name= """
+An optional normalized identifier for the skill, used to deduplicate and match skills across the system.
+""";
+
+sem Skill. category= """
+The broad category or domain the skill belongs to.
+This helps in grouping and filtering skills for users and roles.
+""";

@@ -17,8 +17,7 @@ node User {
     has created_at: str = "";
     has is_private: bool = True;
     has shared_with: list[User] = [];  # list of edge objects
-      # list of edge objects
-
+    # list of edge objects
     def add_skill(skill_name: str, level: int) -> str;
     def update_skill(skill_name: str, level: int) -> str;
     def add_target_role(role: str) -> str;

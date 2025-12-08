@@ -13,28 +13,18 @@ import from models.models {
     LearninPath,
     MatchScore,
     UserRole,
-    SkillDifficulty,
     SeniorityLevel
 }
-import from edges.edges { has_skill, requires_skill }
+import from edges.edges { has_skill, requires_skill, SkillDifficulty }
 import from walkers.profile_manager { ProfileManager }
 import from walkers.resume_parser { ResumeParser }
+import from walkers.skill_extractor { SkillExtractor }
 
 with entry {
-    skill_python = Skill(
-        id="s1",
-        name="Python",
-        level_required=1,
-        difficulty_level=SkillDifficulty.BEGINNER.value
-    );
+    skill_python = Skill(id="s1", name="Python");
     root ++> skill_python;
 
-    skill_ml = Skill(
-        id="s2",
-        name="Machine Learning",
-        level_required=2,
-        difficulty_level=SkillDifficulty.INTERMEDIATE.value
-    );
+    skill_ml = Skill(id="s2", name="Machine Learning");
     root ++> skill_ml;
 
     user1 = User(
@@ -51,13 +41,11 @@ with entry {
     );
     root ++> user1;
 
-    # Add skills to user
     user1.add_skill("Python", 4);
     user1.add_skill("Machine Learning", 2);
     user1.add_skill("SQL", 3);
     user1.update_skill("Python", 5);
 
-    # Create a role
     role_ds = Role(
         id="r1",
         name="Data Scientist",
@@ -67,9 +55,13 @@ with entry {
     root ++> role_ds;
 
     # Role → Skill required edges
-    role_ds +>: requires_skill(level_required=1) :+> skill_python;
-    role_ds +>: requires_skill(level_required=2) :+> skill_ml;
+    role_ds +>: requires_skill(required_level=1) :+> skill_python;
+    role_ds +>: requires_skill(required_level=2) :+> skill_ml;
 
-    root spawn ProfileManager(user_id="u1");
-    root spawn ResumeParser(uploaded_path="./sample_resumes/john_resume.pdf");
+    # root spawn ProfileManager(user_id="u1");
+    # root spawn ResumeParser(uploaded_path="./sample_resumes/john_resume.pdf");
+    root spawn SkillExtractor(
+        user_id="u1",
+        resume_parser=ResumeParser(uploaded_path="./sample_resumes/john_resume.pdf")
+    );
 }
