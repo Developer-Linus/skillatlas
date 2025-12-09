@@ -97,8 +97,8 @@ node SkillCluster {
 node Trend {
     has topic: str;
     has trend_score: int;
-    has affected_skills: str;
-    has affected_roles: str;
+    has affected_skills: list[str];
+    has affected_roles: list[str];
 }
 
 node LearninPath {
