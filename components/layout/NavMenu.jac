@@ -1,4 +1,4 @@
-cl import from "@jac-client/utils" { Link, jacIsLoggedIn, jacLogout }
+cl import from "@jac-client/utils" { Link, jacIsLoggedIn, jacLogout, Navigate }
 
 cl {
     def NavMenu()  -> any {
@@ -27,7 +27,7 @@ cl {
                     </Link>
                     <button
                         className="auth-button px-4 py-2 rounded bg-cyan-500 text-white hover:bg-cyan-600 transition"
-                        onClick={lambda  e: any  -> None{ jacLogout();} }
+                        onClick={lambda   -> None{ jacLogout();} }
                     >
                         Logout
                     </button>
