@@ -1,4 +1,4 @@
-impl User.get_basic_info{
+impl UserData.get_basic_info{
     return {
         "id": self.id,
         "email": self.email,
@@ -8,23 +8,23 @@ impl User.get_basic_info{
     };
 }
 
-impl User.get_target_roles{
+impl UserData.get_target_roles{
     return self.target_roles;
 }
 
-impl User.get_completed_courses{
+impl UserData.get_completed_courses{
     return self.completed_courses;
 }
 
-impl User.get_preferred_industries{
+impl UserData.get_preferred_industries{
     return self.preferred_industries;
 }
 
-impl User.get_learning_progress{
+impl UserData.get_learning_progress{
     return self.learning_progress;
 }
 
-impl User.get_skills{
+impl UserData.get_skills{
     skill_nodes = [self-->(`?Skill)];
     skills_list = [];
     for s in skill_nodes {
@@ -33,7 +33,7 @@ impl User.get_skills{
     return skills_list;
 }
 
-impl User.get_profile_snapshot{
+impl UserData.get_profile_snapshot{
     return {
         "basic_info": self.get_basic_info(),
         "skills": self.get_skills(),
@@ -44,7 +44,7 @@ impl User.get_profile_snapshot{
     };
 }
 
-impl User.add_skill{
+impl UserData.add_skill{
     if level < 0 {
         return "Level cannot be negative.";
     }
@@ -58,7 +58,7 @@ impl User.add_skill{
     return f"Skill {skill_name} added with level {level}.";
 }
 
-impl User.update_skill{
+impl UserData.update_skill{
     if level < 0 {
         return "Level cannot be negative.";
     }
@@ -76,7 +76,7 @@ impl User.update_skill{
     return f"Skill {skill_name} updated to level {level}";
 }
 
-impl User.add_target_role{
+impl UserData.add_target_role{
     if role == "" {
         return "Role cannot be empty.";
     }
@@ -86,7 +86,7 @@ impl User.add_target_role{
     return f"Target role '{role}' added.";
 }
 
-impl User.remove_target_role{
+impl UserData.remove_target_role{
     if role in self.target_roles {
         self.target_roles.remove(role);
         return f"Target role '{role}' removed.";
@@ -94,7 +94,7 @@ impl User.remove_target_role{
     return f"Role '{role}' not found.";
 }
 
-impl User.complete_course{
+impl UserData.complete_course{
     if course(course_name in self.completed_courses) {
         self.completed_courses.append(course_name);
     }

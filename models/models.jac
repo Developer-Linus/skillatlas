@@ -3,9 +3,7 @@ enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
-node User {
-    has id: str;
-    has email: str;
+node UserData {
     has role: UserRole;
     has target_roles: list[str];
     has current_position: str = "";
@@ -16,8 +14,7 @@ node User {
     has learning_progress: dict[str, int] = {};
     has created_at: str = "";
     has is_private: bool = True;
-    has shared_with: list[User] = [];  # list of edge objects
-    # list of edge objects
+
     def add_skill(skill_name: str, level: int) -> str;
     def update_skill(skill_name: str, level: int) -> str;
     def add_target_role(role: str) -> str;
@@ -96,7 +93,6 @@ node SkillCluster {
 
 node Trend {
     has topic: str;
-    has trend_score: int;
     has affected_skills: list[str];
     has affected_roles: list[str];
 }
