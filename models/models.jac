@@ -4,6 +4,7 @@ enum UserRole { ADMIN = "admin", USER = "user" }
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
 node UserData {
+    has email: str;
     has role: UserRole;
     has target_roles: list[str];
     has current_position: str = "";
