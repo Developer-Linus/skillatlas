@@ -1,12 +1,10 @@
 import {__jacJsx, __jacSpawn} from "@jac-client/utils";
-import { useState } from "react";
+import "./styles.css";
+import { HomePage } from "./pages/HomePage.js";
+import { SignupPage } from "./components/auth/SignUp.js";
+import { LoginPage } from "./components/auth/Login.js";
+import { Onboarding } from "./components/onboarding/onboarding.js";
 function app() {
-  let [answer, setAnswer] = useState(0);
-  async function computeAnswer() {
-    let response = await __jacSpawn("add", "", {"x": 40, "y": 2});
-    let result = response.reports;
-    setAnswer(result);
-  }
-  return __jacJsx("div", {}, [__jacJsx("button", {"onClick": computeAnswer}, ["Click Me"]), __jacJsx("div", {}, [__jacJsx("h1", {}, ["Answer:", __jacJsx("span", {}, [answer])])])]);
+  return __jacJsx(Router, {}, [__jacJsx("div", {"assName": "min-h-screen bg-gray-50 text-gray-900 font-sans"}, [__jacJsx(Routes, {}, [__jacJsx(Route, {"path": "/", "element": __jacJsx(HomePage, {}, [])}, []), __jacJsx(Route, {"path": "/login", "element": __jacJsx(LoginPage, {}, [])}, []), __jacJsx(Route, {"path": "/signup", "element": __jacJsx(SignupPage, {}, [])}, []), __jacJsx(Route, {"path": "/onboarding", "element": __jacJsx(Onboarding, {}, [])}, [])])])]);
 }
 export { app };

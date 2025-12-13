@@ -1,0 +1,151 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* =========================
+   Base Theme Variables
+========================= */
+@theme {
+    /* Fonts */
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+    /* Primary / Action Colors */
+    --color-primary-500: #3B82F6;
+    /* blue main */
+    --color-primary-600: #2563EB;
+    /* blue hover */
+    --color-secondary-500: #14B8A6;
+    /* teal highlights */
+    --color-accent-400: #22D3EE;
+    /* cyan accents */
+
+    /* Neutral / Background */
+    --color-gray-50: #F9FAFB;
+    --color-gray-100: #F3F4F6;
+    --color-gray-200: #E5E7EB;
+    --color-gray-400: #9CA3AF;
+    --color-gray-600: #4B5563;
+    --color-gray-800: #1F2937;
+
+    /* Feedback / Alerts */
+    --color-success-500: #22C55E;
+    --color-warning-500: #F59E0B;
+    --color-error-500: #EF4444;
+
+    /* Border Radius */
+    --radius-sm: 0.125rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+}
+
+html,
+body {
+    @apply font-sans bg-gray-50 text-gray-800;
+}
+
+main {
+    @apply min-h-screen p-6;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-sans);
+    color: var(--color-gray-800);
+}
+
+a {
+    @apply transition-colors;
+}
+
+button {
+    @apply cursor-pointer transition-all;
+}
+@layer components {
+
+    /* Header / Navbar */
+    .header {
+        @apply w-full shadow-md bg-gray-50;
+    }
+
+    .header-inner {
+        @apply max-w-7xl mx-auto px-6 py-4 flex items-center justify-between;
+    }
+
+    /* Logo */
+    .logo-title {
+        @apply text-2xl font-bold text-blue-600;
+    }
+
+    .logo-subtitle {
+        @apply text-sm text-teal-500;
+    }
+
+    /* Nav Menu */
+    .nav-link {
+        @apply text-base font-medium text-blue-600 hover:text-blue-700 transition;
+    }
+
+    .nav-button {
+        @apply px-4 py-2 rounded text-white;
+    }
+
+    .nav-button-login {
+        @apply bg-blue-600 hover:bg-blue-700;
+    }
+
+    .nav-button-logout {
+        @apply bg-cyan-500 hover:bg-cyan-600;
+    }
+
+    /* Buttons */
+    .primary-btn {
+        @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md px-4 py-2;
+    }
+
+    .secondary-btn {
+        @apply bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-md px-4 py-2;
+    }
+
+    /* Cards / Sections */
+    .card {
+        @apply bg-white rounded-lg shadow-md p-4;
+    }
+
+    /* Form Inputs */
+    .input {
+        @apply w-full p-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500;
+    }
+
+    .textarea {
+        @apply w-full p-3 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500;
+    }
+
+    /* Section Headings */
+    .section-heading {
+        @apply text-3xl font-semibold text-gray-800 mb-4;
+    }
+
+    .section-subheading {
+        @apply text-lg text-gray-600 mb-2;
+    }
+}
+@utility text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-teal-400 to-cyan-400;
+}
+
+@utility fade-in {
+    animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

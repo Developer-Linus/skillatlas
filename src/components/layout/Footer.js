@@ -1,0 +1,6 @@
+import {__jacJsx, __jacSpawn} from "@jac-client/utils";
+import { provideYear } from "../../../utils.js";
+function Footer() {
+  return __jacJsx("footer", {"className": "bg-blue-600 text-white py-8 px-4"}, [__jacJsx("div", {"className": "max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4"}, [__jacJsx("div", {"className": "text-center sm:text-left"}, [__jacJsx("h3", {"className": "text-2xl font-extrabold tracking-wide text-yellow-300 flex items-center gap-1"}, [__jacJsx("span", {"className": "rounded-full bg-white text-blue-600 px-2 py-1"}, ["S"]), "kill", __jacJsx("span", {"className": "rounded-full bg-white text-blue-600 px-2 py-1"}, ["A"]), "tlas"]), __jacJsx("p", {"className": "text-sm text-blue-100"}, ["Guiding Kenyan youth toward smarter career decisions."])]), __jacJsx("div", {"className": "flex flex-col sm:flex-row gap-3 text-center text-sm text-blue-100"}, [__jacJsx("a", {"href": "/about", "className": "hover:underline"}, ["About"]), __jacJsx("a", {"href": "/contact", "className": "hover:underline"}, ["Contact"]), __jacJsx("a", {"href": "/privacy", "className": "hover:underline"}, ["Privacy Policy"])]), __jacJsx("div", {"className": "text-center text-sm text-blue-100"}, ["© ", provideYear(), " SkillAtlas. All rights reserved."])])]);
+}
+export { Footer };
