@@ -1,11 +1,11 @@
 import from byllm.lib { Model }
 import from core.llm { llm }
-import from models.models { User }
+import from models.models { UserData }
 walker ProfileManager {
     has user_id: str;
 
-    def get_user()  -> User {
-        return [root-->(`?User:id==self.user_id)][0];
+    def get_user_data()  -> UserData {
+        return [root-->(`?UserData)][0];
     }
 
     def get_profile_snapshot()  -> dict[str, any] {
