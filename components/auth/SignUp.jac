@@ -1,11 +1,12 @@
 cl import from react { useState }
 cl import from "@jac-client/utils" {
     Link,
+    Navigate,
     jacSignup,
     jacIsLoggedIn,
-    jacLogin,
     jacLogout
 }
+cl import from ..onboarding.onboarding { Onboarding }
 
 cl {
     def SignupPage()  -> any {
@@ -23,7 +24,7 @@ cl {
                 </h2>
                 <button
                     className="nav-button nav-button-logout mt-4"
-                    onClick={lambda   -> None{ jacLogout();} }
+                    onClick={lambda   -> None{ jacLogout();window.location.href = "/page/app#/signup";} }
                 >
                     Logout
                 </button>
@@ -34,10 +35,12 @@ cl {
             e.preventDefault();
 
             # Reset messages
+            # Reset messages
             setError("");
             setSuccess("");
 
-            # Simple validation
+            # Validation
+            # Validation
             if not email or not password or not confirmPassword {
                 setError("All fields are required.");
                 return;
@@ -47,14 +50,10 @@ cl {
                 return;
             }
 
-            # Call Jac signup
+            # Signup
             result = await jacSignup(email, password);
-
-            if result.success {
-                setSuccess("Signup successful! You can now log in.");
-                setEmail("");
-                setPassword("");
-                setConfirmPassword("");
+            if result["success"] {
+                return <Navigate to="/onboarding" />;
             } else {
                 setError(result.error or "Signup failed. Try again.");
             }
