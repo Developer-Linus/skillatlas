@@ -1,15 +1,14 @@
 import from walkers.resume_parser { ResumeParser }
-import from models.models { User, Skill }
+import from models.models { UserData, Skill }
 import from edges.edges { has_skill }
 import from core.llm { llm }
 
 walker SkillExtractor {
-    has user_id: str;
     has resume_parser: ResumeParser;
     has resume_parser_output: str = "";
 
-    def get_user()  -> User {
-        return [root-->(`?User:id==self.user_id)][0];
+    def get_user_data()  -> UserData {
+        return [root-->(`?UserData)][0];
     }
 
     def get_resume_text()  -> str {

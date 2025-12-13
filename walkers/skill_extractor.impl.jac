@@ -1,21 +1,18 @@
 impl SkillExtractor.extract{
-    user = self.get_user();
+    user_data = self.get_user_data();
     extracted_skills = self.extract_skills();
-    existing_user_skills = user.get_skills();
+    existing_user_skills = user_data.get_skills();
     existing_user_skill_names = [
         s["name"].lower().strip() for s in existing_user_skills
     ];
-    print(extracted_skills);
-    print(existing_user_skill_names);
     newly_added_skills = [];
     for skill_node in extracted_skills {
         if not skill_node.name.lower() in existing_user_skill_names {
-            user +>: has_skill(level=1) :+> skill_node;
+            user_data +>: has_skill(level=1) :+> skill_node;
             newly_added_skills.append(skill_node.name);
         }
     }
     report {
-        "user_id": self.user_id,
         "existing_skills": existing_user_skill_names,
         "newly_added_skills": newly_added_skills,
         "total_skills_after_update": [s["name"] for s in user.get_skills()]
