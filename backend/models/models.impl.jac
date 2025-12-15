@@ -8,8 +8,8 @@ impl UserData.get_basic_info{
     };
 }
 
-impl UserData.get_target_roles{
-    return self.target_roles;
+impl UserData.get_target_role{
+    return self.target_role;
 }
 
 impl UserData.get_completed_courses{
