@@ -1,106 +1,110 @@
-import from dotenv { load_dotenv }
-import from core.serper { SERPER_API_KEY }
+import os;
 import requests;
+import logging;
+import from hashlib { md5 }
 
 obj WebSearch {
-    has api_key: str = SERPER_API_KEY;
-    has base_url: str = "https://google.serper.dev/search";
-    has jobs_url: str = "https://google.serper.dev/jobs";
+    has api_key: str = os.getenv("SCRAPINGDOG_API_KEY");
+    has base_url: str = "https://api.scrapingdog.com/google_jobs";
 
     """
-    Fetches market trend insights for a given job role in Kenya. This method is intentionally focused on trends - not job postings.
+    Fetch raw job postings for a given role in Kenya.
+    Simple version based on Scrapingdog example.
     """
-    def search_job_trends(role: str) -> str {
-        headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"};
+    def search_job_postings(role: str) -> list {
+        logging.basicConfig(level=logging.INFO);
 
-        # Query designed to force Google results toward trend-focused content
-        query = f"latest {role} job market trends Kenyan youth demand skills for the years 2024 and 2025.";
-        payload = {"q": query, "gl": "ke", "hl": "en", "num": 10};
-        # Make Serper API request
-        resp = requests.post(self.base_url, headers=headers, json=payload);
+        params = {
+            "api_key": self.api_key,
+            "query": f"{role}+jobs+in+Kenya",
+            "country": "KE",
+            "language": "en",
 
-        if resp.status_code != 200 {
-            return f"Serper request failed: {resp.status_code}";
+        };
+
+        try {
+            resp = requests.get(self.base_url, params=params, timeout=10);
+            resp.raise_for_status();
+        } except requests.exceptions.Timeout {
+            logging.error("Request timed out while fetching job postings.");
+            return [];
+        } except requests.exceptions.RequestException as e {
+            logging.error(f"Error during Scrapingdog request: {e}");
+            return [];
         }
 
-        data = resp.json();
-
-        # Main list of search results
-        organic_results = data.get("organic", []) if isinstance(data, dict) else [];
-
-        # Extract trend insights
-        trend_keywords = [
-            "trend",
-            "demand",
-            "market",
-            "growth",
-            "skills",
-            "opportunities",
-            "youth",
-            "hiring"
-        ];
-        # Extract from organic search snippets
-        for item in organic_results {
-            snippet = item.get("snippet", "");
-            lower_snippet = snippet.lower();
-            # Keep snippet only if it contains any trend keyword
-            for kw in trend_keywords {
-                if kw in lower_snippet {
-                    trends.append(snippet);
-                    break;
-                }
-            }
-        }
-        # Extract from People Also Ask (PAA) section
-        for paa in data.get("peopleAlsoAsk", []) {
-            answer = paa.get("answer", "");
-            if answer {
-                trends.append(answer);
-            }
-        }
-        # Extract from knowledge graph description
-        kg = data.get("knowledgeGraph", {});
-        if kg.get("description") {
-            trends.append(kg["description"]);
+        try {
+            data = resp.json();
+        } except ValueError {
+            logging.error("Failed to parse JSON from Scrapingdog response.");
+            return [];
         }
 
-        # Handle case where no trends were found
-        if len(trends) == 0 {
-            return "No clear market trends found for this role.";
+        jobs = data.get("jobs_results", []);
+        if not isinstance(jobs, list) {
+            logging.warning("Unexpected jobs_results format; expected a list.");
+            return [];
         }
-        # Return clean, concise summary
-        summary = "";
-        for t in trends[:6] {
-            summary += f"-{t}\n";
-        }
-        return summary;
-    }
-
-    # Fetches active job postings for a given role in Kenya using Serper Jobs API
-    def search_job_postings(role: str) {
-        headers = {"X-API-KEY": self.api_key, "Content-Type": "application/json"};
-        payload = {"q": f"{role} jobs Kenya", "gl": "ke", "hl": "en", "num": 20};
-        resp = requests.post(self.jobs_url, headers=headers, json=payload);
-        if resp.status_code != 200 {
-            return f"Serper request failed: {resp.status_code}";
-        }
-        data = resp.json();
-        jobs = data.get("jobs", []);
-
-        jobs = jobs[:10];
 
         job_nodes = [];
         for job in jobs {
-            job_nodes.append(
-                {
-                    "title": job.get('title', ""),
-                    "company": job.get("companyName", ""),
-                    "location": job.get("location", ""),
-                    "salary_range": job.get("salary", ""),
-                    "role_type": job.get("jobType", "")
+            try {
+                title = job.get("title", "").strip();
+                company = job.get("company_name", "").strip();
+                location = job.get("location", "").strip();
+                description = job.get("description", "").strip();
+                extensions = job.get("extensions", []);
+                apply_links = job.get("apply_links", []);
+                source = job.get("via", job.get("source", "")).strip();
+                employment_type = "UNKNOWN";
+                posted_at = "";
+                for ext in extensions {
+                    lower_ext = ext.lower();
+                    if "full" in lower_ext
+                    or "part" in lower_ext
+                    or "contract" in lower_ext {
+                        employment_type = ext;
+                    } elif "day" in lower_ext or "ago" in lower_ext {
+                        posted_at = ext;
+                    }
                 }
-            );
+
+                salary = "";
+                job_uid_str = f"{title}_{company}_{location}";
+                job_uid = md5(job_uid_str.encode("utf-8")).hexdigest();
+
+                job_nodes.append(
+                    {
+                        "job_uid": job_uid,
+                        "title": title,
+                        "company": company,
+                        "location": location,
+                        "employment_type": employment_type,
+                        "description": description,
+                        "posted_at": posted_at,
+                        "source": source,
+                        "salary": salary,
+                        "apply_links": apply_links
+                    }
+                );
+            } except Exception as e {
+                logging.warning(f"Skipping a job due to unexpected format: {e}");
+                continue;
+            }
         }
+
+        if not job_nodes {
+            logging.info(f"No job postings found for role '{role}'.");
+        }
+
         return job_nodes;
     }
+}
+
+with entry {
+   
+    web = WebSearch();
+    print(web.api_key);
+    results = web.search_job_postings("Junior Data analyst");
+    print(results);
 }
