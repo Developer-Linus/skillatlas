@@ -1,5 +1,10 @@
-import from edges.edges { has_skill }
+import from backend.edges.edges { has_skill }
 enum UserRole { ADMIN = "admin", USER = "user" }
+enum EmploymentType {
+    FULLTIME = "full_time",
+    PARTTIME = "part_time",
+    CONTRACT = "contract"
+}
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
@@ -43,8 +48,6 @@ node Skill {
 node Role {
     has id: str;
     has name: str;
-    has average_salary: int;
-    has seniority_level: SeniorityLevel;
     has description: str = "";
     has industry: str = "";
 }
@@ -59,11 +62,15 @@ node Course {
 }
 
 node JobPosting {
+    has job_uid: str;
     has title: str;
-    has location: str;
     has company: str;
-    has salary_range: int;
-    has role_type: str;
+    has location: str;
+    has employment_type: EmploymentType;
+    has description: str;
+    has posted_at: str;
+    has source: str;
+    has salary: str = "";
 }
 
 node Certification {
@@ -74,22 +81,9 @@ node Certification {
     has level: str;
 }
 
-node Industry {
-    has name: str;
-    has top_skills: str;
-    has growth_score: str;
-}
-
 node SkillGap {
     has skill_name: str;
-    has required_level: str;
-    has current_level: str;
     has severity: int;
-}
-
-node SkillCluster {
-    has cluster_name: str;
-    has skills: list[str];
 }
 
 node Trend {
@@ -98,7 +92,7 @@ node Trend {
     has affected_roles: list[str];
 }
 
-node LearninPath {
+node LearningPath {
     has name: str;
     has steps: list[str];
     has goal_role: str;
