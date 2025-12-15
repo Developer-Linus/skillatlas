@@ -1,6 +1,6 @@
 import from backend.utils.cv_utils { ResumeUtils }
 import from core.llm { llm }
-walker ResumeParser {
+walker resume_parser {
     has uploaded_path: str;
     has utils: ResumeUtils = ResumeUtils();
 

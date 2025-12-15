@@ -28,9 +28,9 @@ function SignupPage() {
     }
     let result = await jacSignup(email, password);
     if (result["success"]) {
-      return __jacJsx(Navigate, {"to": "/onboarding"}, []);
+      window.location.href = "/page/app#/onboarding";
     } else {
-      setError(result.error || "Signup failed. Try again.");
+      setError(result["error"] ? result["error"] : "Signup failed. Try again.");
     }
   }
   return __jacJsx("div", {"className": "flex justify-center items-center min-h-screen bg-gray-50 p-6"}, [__jacJsx("form", {"onSubmit": handleSignup, "className": "card flex flex-col gap-4 w-full max-w-md fade-in"}, [__jacJsx("h1", {"className": "section-heading text-gradient text-center"}, ["Create Your Account"]), error ? __jacJsx("div", {"style": {"color": "red"}}, [error]) : null, success ? __jacJsx("div", {"style": {"color": "green"}}, [success]) : null, __jacJsx("input", {"type": "email", "placeholder": "Email", "value": email, "onChange": e => {

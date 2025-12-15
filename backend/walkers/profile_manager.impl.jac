@@ -1,10 +1,10 @@
-impl ProfileManager.execute{
+impl profile_manager.execute{
     snapshot = self.get_profile_snapshot();
     summary = self.summarize_profile();
     report {"profile_snapshot": snapshot, "profile_summary": summary} ;
 }
 
-sem ProfileManager. summarize_profile= """
+sem profile_manager. summarize_profile= """
 You are given a user profile snapshot in dictionary form.
 Write a single, concise paragraph summary that includes:
 - Current position and years of experience.

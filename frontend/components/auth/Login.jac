@@ -8,7 +8,6 @@ cl {
         let [error, setError] = useState("");
         let [success, setSuccess] = useState("");
 
-        # Redirect if already logged in
         if jacIsLoggedIn() {
             return <div className="flex flex-col items-center justify-center min-h-screen p-6">
                 <h2 className="section-heading">
@@ -37,7 +36,6 @@ cl {
 
             if successLogin {
                 setSuccess("Login successful! Redirecting...");
-                # Redirect to dashboard or home
                 window.location.href = "/page/app#/";
             } else {
                 setError("Invalid email or password.");
@@ -92,7 +90,6 @@ cl {
                 </button>
                 <p className="text-center text-gray-600 text-sm mt-2">
                     Don't have an account?
-                    {" "}
                     <Link
                         to="/signup"
                         className="text-blue-600 hover:text-blue-700 font-semibold"

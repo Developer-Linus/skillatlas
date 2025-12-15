@@ -1,10 +1,10 @@
-import from backend.walkers.resume_parser { ResumeParser }
+import from backend.walkers.resume_parser { resume_parser }
 import from backend.models.models { UserData, Skill }
 import from backend.edges.edges { has_skill }
 import from core.llm { llm }
 
-walker SkillExtractor {
-    has resume_parser: ResumeParser;
+walker skill_extractor {
+    has resume_parser: resume_parser;
     has resume_parser_output: str = "";
 
     def get_user_data()  -> UserData {

@@ -1,7 +1,9 @@
+import from dotenv { load_dotenv }
+cl import from "@jac-client/utils" { Router, Routes, Route }
 cl {
     def app()  -> any {
         return <Router>
-            <div assName="min-h-screen bg-gray-50 text-gray-900 font-sans">
+            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
                 <Routes>
                     <Route
                         path="/"
@@ -23,4 +25,8 @@ cl {
             </div>
         </Router>;
     }
+}
+
+with entry {
+    load_dotenv();
 }

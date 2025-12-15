@@ -32,13 +32,9 @@ edge covers_skill {
     has difficulty_level: SkillDifficulty;
 }
 
-edge represents_role {}
-
 edge demands_skill {
     has importance_score: float;
 }
-
-edge belongs_to_cluster {}
 
 edge has_gap {}
 
@@ -53,6 +49,5 @@ edge enrolled_in {
     }
 }
 
-edge aspires_to {}
-
-edge interested_in_skill {}
+# Job Posting --> Senioriry
+edge has_seniority

@@ -1,4 +1,4 @@
-impl ResumeParser.execute{
+impl resume_parser.execute{
     parsed = self.parse_resume();
     summary = self.summarize_resume();
     report {
@@ -10,7 +10,7 @@ impl ResumeParser.execute{
     } ;
 }
 
-sem ResumeParser. summarize_resume= """
+sem resume_parser. summarize_resume= """
 Summarize a resume for professional understanding.
 
     Purpose:

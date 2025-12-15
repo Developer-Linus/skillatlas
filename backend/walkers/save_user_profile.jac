@@ -1,16 +1,16 @@
 import from backend.models.models { UserData, UserRole }
-walker SaveUserProfile {
+walker save_user_profile {
     has email: str;
     has target_role: str;
 
     can start with `root entry {
-        # Visit UserData nodes if they exist, else create one
         visit [here-->(`?UserData)] else {
-            here ++> UserData(
+            new_user = here ++> UserData(
                 email=self.email,
                 role=UserRole.USER.value,
                 target_role=self.target_role
             );
+            visit [-->new_user];
         }
     }
 

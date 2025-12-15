@@ -1,5 +1,5 @@
 import {__jacJsx, __jacSpawn} from "@jac-client/utils";
-import { fileToBase64 } from "../../../utils.js";
+import { fileToBase64 } from "../../../../utils.js";
 import { useState } from "react";
 import { Navigate, jacIsLoggedIn } from "@jac-client/utils";
 function Onboarding() {
@@ -22,13 +22,13 @@ function Onboarding() {
     }
     try {
       let result;
-      if (result.reports && result.reports[0]["success"]) {
+      if (result.reports && result.reports[0][0]["success"]) {
         setSuccess("Profile updated successfully!");
         setStep(2);
       } else {
         setError("Failed to update profile.");
       }
-    } catch {
+    } catch (e) {
       setError("Failed to update profile. Try again.");
     }
   }
@@ -43,10 +43,11 @@ function Onboarding() {
     try {
       let base64Data = await fileToBase64(cvFile);
       let saveResult;
-      if (saveResult.status !== "success") {
+      if (!saveResult.reports || saveResult.reports[0][0]["status"] !== "success") {
         setError("Failed to upload CV: " + saveResult.error);
         return;
       }
+      let uploadedPath = saveResult.reports[0][0]["path"];
       let parseResult;
       setSuccess("CV uploaded and processed successfully!");
       console.log("Resume summary:", parseResult.resume_summary);
@@ -86,10 +87,10 @@ function Onboarding() {
       return handleStep2Submit;
     }
   }
-  return __jacJsx("div", {"className": "flex justify-center items-center min-h-screen bg-gray-50 p-6"}, [__jacJsx("form", {"className": "card flex flex-col gap-4 w-full max-w-md fade-in", "onSubmit": getSubmitHandler()}, [__jacJsx("h1", {"className": "section-heading text-gradient text-center"}, [getHeadingText()]), __jacJsx("p", {"className": "text-gray-600 text-sm text-center"}, ["Step ", step, " of 2"]), error && __jacJsx("div", {"style": {"color": "red"}}, [error]), success && __jacJsx("div", {"style": {"color": "green"}}, [success]), step === 1 && new Set([__jacJsx(null, {}, [__jacJsx("input", {"type": "email", "placeholder": "Email", "value": email, "onChange": e => {
+  return __jacJsx("div", {"className": "flex justify-center items-center min-h-screen bg-gray-50 p-6"}, [__jacJsx("form", {"className": "card flex flex-col gap-4 w-full max-w-md fade-in", "onSubmit": getSubmitHandler()}, [__jacJsx("h1", {"className": "section-heading text-gradient text-center"}, [getHeadingText()]), __jacJsx("p", {"className": "text-gray-600 text-sm text-center"}, ["Step ", step, " of 2"]), error && __jacJsx("div", {"style": {"color": "red"}}, [error]), success && __jacJsx("div", {"style": {"color": "green"}}, [success]), step === 1 ? __jacJsx(null, {}, [__jacJsx("input", {"type": "email", "placeholder": "Email", "value": email, "onChange": e => {
     setEmail(e.target.value);
   }, "className": "input"}, []), __jacJsx("input", {"type": "text", "placeholder": "Target Role", "value": targetRole, "onChange": e => {
     setTargetRole(e.target.value);
-  }, "className": "input"}, [])])]), step === 2 && new Set([__jacJsx(null, {}, [__jacJsx("input", {"type": "file", "accept": ".pdf,.docx,.txt", "onChange": handleFileChange, "className": "input"}, [])])]), __jacJsx("div", {"className": "flex justify-between items-center mt-2"}, [step === 2 && new Set([__jacJsx("button", {"type": "button", "className": "secondary-btn", "onClick": handleBack}, ["Back"])]), __jacJsx("button", {"type": "submit", "className": "primary-btn"}, [getSubmitButtonText()])])])]);
+  }, "className": "input"}, [])]) : null, step === 2 ? __jacJsx(null, {}, [__jacJsx("input", {"type": "file", "accept": ".pdf,.docx,.txt", "onChange": handleFileChange, "className": "input"}, [])]) : null, __jacJsx("div", {"className": "flex justify-between items-center mt-2"}, [step === 2 ? __jacJsx("button", {"type": "button", "className": "secondary-btn", "onClick": handleBack}, ["Back"]) : null, __jacJsx("button", {"type": "submit", "className": "primary-btn"}, [getSubmitButtonText()])])])]);
 }
 export { Onboarding };

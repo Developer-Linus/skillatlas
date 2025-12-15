@@ -2,7 +2,7 @@ import base64;
 import os;
 import time;
 
-walker StoreCVFile {
+walker store_cv_file {
     has file_name: str;
     has file_data_b64: str;
     has upload_dir: str = "uploads";

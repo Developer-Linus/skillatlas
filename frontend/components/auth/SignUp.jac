@@ -34,12 +34,9 @@ cl {
         async def handleSignup(e: any) -> None {
             e.preventDefault();
 
-            # Reset messages
-            # Reset messages
             setError("");
             setSuccess("");
 
-            # Validation
             # Validation
             if not email or not password or not confirmPassword {
                 setError("All fields are required.");
@@ -53,9 +50,11 @@ cl {
             # Signup
             result = await jacSignup(email, password);
             if result["success"] {
-                return <Navigate to="/onboarding" />;
+                window.location.href = "/page/app#/onboarding";
             } else {
-                setError(result.error or "Signup failed. Try again.");
+                setError(
+                    result["error"] if result["error"] else "Signup failed. Try again."
+                );
             }
         }
 

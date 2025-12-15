@@ -1,4 +1,4 @@
-impl SkillExtractor.extract{
+impl skill_extractor.extract{
     user_data = self.get_user_data();
     extracted_skills = self.extract_skills();
     existing_user_skills = user_data.get_skills();
@@ -19,7 +19,7 @@ impl SkillExtractor.extract{
     } ;
 }
 
-sem SkillExtractor. extract_skills= """
+sem skill_extractor. extract_skills= """
 You extract the most relevant skills from the user’s resume text.
 
 Rules:

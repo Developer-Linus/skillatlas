@@ -1,7 +1,7 @@
 import from byllm.lib { Model }
 import from core.llm { llm }
 import from backend.models.models { UserData }
-walker ProfileManager {
+walker profile_manager {
     has user_id: str;
 
     def get_user_data()  -> UserData {

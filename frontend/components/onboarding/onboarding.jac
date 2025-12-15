@@ -1,10 +1,9 @@
-cl import from ....utils { fileToBase64 }
+cl import from .....utils { fileToBase64 }
 cl import from react { useState }
 cl import from "@jac-client/utils" { Navigate, jacIsLoggedIn }
-import from walkers.save_user_profile { SaveUserProfile }
-import from walkers.store_cv_file { StoreCVFile }
-import from walkers.resume_parser { ResumeParser }
-
+import from backend.walkers.save_user_profile { save_user_profile }
+import from backend.walkers.store_cv_file { store_cv_file }
+import from backend.walkers.resume_parser { resume_parser }
 cl {
     def Onboarding()  -> any {
         let [step, setStep] = useState(1);
@@ -30,14 +29,16 @@ cl {
             }
 
             try {
-                result = SaveUserProfile(email=email, target_role=target_role) spawn root;
-                if result.reports and result.reports[0]["success"] {
+                result = root spawn save_user_profile(
+                    email=email, target_role=targetRole
+                );
+                if result.reports and result.reports[0][0]["success"] {
                     setSuccess("Profile updated successfully!");
                     setStep(2);
                 } else {
                     setError("Failed to update profile.");
                 }
-            } except Exception {
+            } except Exception as e {
                 setError("Failed to update profile. Try again.");
             }
         }
@@ -55,14 +56,16 @@ cl {
 
             try {
                 base64Data = await fileToBase64(cvFile);
-                saveResult = root spawn StoreCVFile(
+                saveResult = root spawn store_cv_file(
                     file_name=cvFile.name, file_data_b64=base64Data
                 );
-                if saveResult.status != "success" {
+                if not saveResult.reports
+                or saveResult.reports[0][0]["status"] != "success" {
                     setError("Failed to upload CV: " + saveResult.error);
                     return;
                 }
-                parseResult = root spawn ResumeParser(uploaded_path=saveResult.path);
+                uploadedPath = saveResult.reports[0][0]["path"];
+                parseResult = root spawn resume_parser(uploaded_path=uploadedPath);
                 setSuccess("CV uploaded and processed successfully!");
                 console.log("Resume summary:", parseResult.resume_summary);
             } except Exception as e {
@@ -76,6 +79,7 @@ cl {
             }
         }
 
+        # Back button
         # Back button
         def handleBack()  -> None {
             setStep(1);
@@ -128,43 +132,52 @@ cl {
                 >
                     {success}
                 </div>}
-                {step == 1
-                and {<>
-                    <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={lambda  e: any  -> None{ setEmail(e.target.value);} }
-                        className="input"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Target Role"
-                        value={targetRole}
-                        onChange={lambda  e: any  -> None{ setTargetRole(
-                            e.target.value
-                        );} }
-                        className="input"
-                    />
-                </>}}
-                {step == 2
-                and {<>
-                    <input
-                        type="file"
-                        accept=".pdf,.docx,.txt"
-                        onChange={handleFileChange}
-                        className="input"
-                    />
-                </>}}
+                {(
+                    <>
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={lambda  e: any  -> None{ setEmail(e.target.value);} }
+                            className="input"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Target Role"
+                            value={targetRole}
+                            onChange={lambda  e: any  -> None{ setTargetRole(
+                                e.target.value
+                            );} }
+                            className="input"
+                        />
+                    </>
+                )
+                if step == 1
+                else None}
+                {(
+                    <>
+                        <input
+                            type="file"
+                            accept=".pdf,.docx,.txt"
+                            onChange={handleFileChange}
+                            className="input"
+                        />
+                    </>
+                )
+                if step == 2
+                else None}
                 <div className="flex justify-between items-center mt-2">
-                    {step == 2
-                    and {<button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={handleBack}
-                    >
-                        Back
-                    </button>}}
+                    {(
+                        <button
+                            type="button"
+                            className="secondary-btn"
+                            onClick={handleBack}
+                        >
+                            Back
+                        </button>
+                    )
+                    if step == 2
+                    else None}
                     <button
                         type="submit"
                         className="primary-btn"
