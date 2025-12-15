@@ -1,10 +1,5 @@
 import from backend.edges.edges { has_skill }
 enum UserRole { ADMIN = "admin", USER = "user" }
-enum EmploymentType {
-    FULLTIME = "full_time",
-    PARTTIME = "part_time",
-    CONTRACT = "contract"
-}
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
 
@@ -19,7 +14,6 @@ node UserData {
     has preferred_industries: list[str] = [];
     has learning_progress: dict[str, int] = {};
     has created_at: str = "";
-    has is_private: bool = True;
 
     def add_skill(skill_name: str, level: int) -> str;
     def update_skill(skill_name: str, level: int) -> str;
@@ -28,7 +22,7 @@ node UserData {
     def complete_course(course_name: str) -> str;
     def get_basic_info()  -> dict[str, str];
     def get_skills()  -> list[dict[str, any]];
-    def get_target_roles()  -> list[str];
+    def get_target_role()  -> list[str];
     def get_completed_courses()  -> list[str];
     def get_preferred_industries()  -> list[str];
     def get_learning_progress()  -> dict[str, int];
@@ -66,11 +60,12 @@ node JobPosting {
     has title: str;
     has company: str;
     has location: str;
-    has employment_type: EmploymentType;
+    has employment_type: str;
     has description: str;
     has posted_at: str;
     has source: str;
     has salary: str = "";
+    has apply_links: list = [];
 }
 
 node Certification {
@@ -104,4 +99,8 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
     has explanation: str;
+}
+
+node Seniority {
+    has level: SeniorityLevel;
 }
