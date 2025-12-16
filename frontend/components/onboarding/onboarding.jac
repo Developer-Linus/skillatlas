@@ -1,9 +1,6 @@
 cl import from .....utils { fileToBase64 }
 cl import from react { useState }
 cl import from "@jac-client/utils" { Navigate, jacIsLoggedIn }
-import from backend.walkers.save_user_profile { save_user_profile }
-import from backend.walkers.store_cv_file { store_cv_file }
-import from backend.walkers.resume_parser { resume_parser }
 cl {
     def Onboarding()  -> any {
         let [step, setStep] = useState(1);
@@ -12,6 +9,7 @@ cl {
         let [cvFile, setCvFile] = useState(None);
         let [error, setError] = useState("");
         let [success, setSuccess] = useState("");
+        let [loading, setLoading] = useState(False);
 
         if not jacIsLoggedIn() {
             return <Navigate to="/login" />;
@@ -32,8 +30,8 @@ cl {
                 result = root spawn save_user_profile(
                     email=email, target_role=targetRole
                 );
-                if result.reports and result.reports[0][0]["success"] {
-                    setSuccess("Profile updated successfully!");
+                if result.reports and result.reports[0]["success"] {
+                    setSuccess("Email and target role updated successfully!");
                     setStep(2);
                 } else {
                     setError("Failed to update profile.");
@@ -48,30 +46,57 @@ cl {
             e.preventDefault();
             setError("");
             setSuccess("");
+            setLoading(True);
 
             if not cvFile {
                 setError("Please select a CV file to upload.");
+                setLoading(False);
                 return;
             }
 
             try {
                 base64Data = await fileToBase64(cvFile);
+
+                # Save file
                 saveResult = root spawn store_cv_file(
                     file_name=cvFile.name, file_data_b64=base64Data
                 );
                 if not saveResult.reports
-                or saveResult.reports[0][0]["status"] != "success" {
-                    setError("Failed to upload CV: " + saveResult.error);
+                or saveResult.reports[0]["status"] != "success" {
+                    setError(
+                        "Failed to upload CV: " + (
+                            saveResult.reports[0]["error"] or "unknown error"
+                        )
+                    );
+                    setLoading(False);
                     return;
                 }
-                uploadedPath = saveResult.reports[0][0]["path"];
+
+                uploadedPath = saveResult.reports[0]["path"];
+
+                # Parse resume
                 parseResult = root spawn resume_parser(uploaded_path=uploadedPath);
+                if not parseResult.reports
+                or parseResult.reports[0]["status"] != "success" {
+                    setError("Failed to parse CV.");
+                    setLoading(False);
+                    return;
+                }
+
+                cleanedText = parseResult.reports[0]["cleaned_resume_text"];
+                # Extract skills
+                extracted_skills = root spawn extract_and_attach_skills(
+                    resume_parser_output=cleanedText
+                );
+                console.log(extracted_skills.reports[0]["total_skills_after_update"]);
                 setSuccess("CV uploaded and processed successfully!");
-                console.log("Resume summary:", parseResult.resume_summary);
             } except Exception as e {
                 setError("Failed to upload or process your CV. Try again.");
+            } finally {
+                setLoading(False);
             }
         }
+
         # File input
         def handleFileChange(e: any) -> None {
             if e.target.files.length > 0 {
@@ -79,7 +104,6 @@ cl {
             }
         }
 
-        # Back button
         # Back button
         def handleBack()  -> None {
             setStep(1);
@@ -91,10 +115,13 @@ cl {
         def getSubmitButtonText()  -> str {
             if step == 1 {
                 return "Next";
+            } elif loading {
+                return "Processing...";
             } else {
                 return "Upload CV";
             }
         }
+
         def getHeadingText()  -> str {
             if step == 1 {
                 return "Step 1: Profile Info";
@@ -102,6 +129,7 @@ cl {
                 return "Step 2: Upload Your CV";
             }
         }
+
         def getSubmitHandler()  -> any {
             if step == 1 {
                 return handleStep1Submit;
@@ -109,6 +137,7 @@ cl {
                 return handleStep2Submit;
             }
         }
+
         return <div className="flex justify-center items-center min-h-screen bg-gray-50 p-6">
             <form
                 className="card flex flex-col gap-4 w-full max-w-md fade-in"
@@ -132,55 +161,47 @@ cl {
                 >
                     {success}
                 </div>}
-                {(
-                    <>
-                        <input
-                            type="email"
-                            placeholder="Email"
-                            value={email}
-                            onChange={lambda  e: any  -> None{ setEmail(e.target.value);} }
-                            className="input"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Target Role"
-                            value={targetRole}
-                            onChange={lambda  e: any  -> None{ setTargetRole(
-                                e.target.value
-                            );} }
-                            className="input"
-                        />
-                    </>
-                )
-                if step == 1
-                else None}
-                {(
-                    <>
-                        <input
-                            type="file"
-                            accept=".pdf,.docx,.txt"
-                            onChange={handleFileChange}
-                            className="input"
-                        />
-                    </>
-                )
-                if step == 2
-                else None}
+                {step == 1
+                and <>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={lambda  e: any  -> None{ setEmail(e.target.value);} }
+                        className="input"
+                    />
+                    <input
+                        type="text"
+                        placeholder="Target Role"
+                        value={targetRole}
+                        onChange={lambda  e: any  -> None{ setTargetRole(
+                            e.target.value
+                        );} }
+                        className="input"
+                    />
+                </>}
+                {step == 2
+                and <>
+                    <input
+                        type="file"
+                        accept=".pdf,.docx,.txt"
+                        onChange={handleFileChange}
+                        className="input"
+                    />
+                </>}
                 <div className="flex justify-between items-center mt-2">
-                    {(
-                        <button
-                            type="button"
-                            className="secondary-btn"
-                            onClick={handleBack}
-                        >
-                            Back
-                        </button>
-                    )
-                    if step == 2
-                    else None}
+                    {step == 2
+                    and <button
+                        type="button"
+                        className="secondary-btn"
+                        onClick={handleBack}
+                    >
+                        Back
+                    </button>}
                     <button
                         type="submit"
                         className="primary-btn"
+                        disabled={loading}
                     >
                         {getSubmitButtonText()}
                     </button>

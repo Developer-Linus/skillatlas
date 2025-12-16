@@ -8,7 +8,7 @@ import tempfile;
 import shutil;
 import traceback;
 
-node ResumeUtils {
+obj ResumeUtils {
     # (1) Detect file type using python-magic
     def detect_file_type(file_path: str) -> str {
         try {

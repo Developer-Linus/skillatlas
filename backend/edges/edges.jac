@@ -48,6 +48,3 @@ edge enrolled_in {
         self.progress = new_progress;
     }
 }
-
-# Job Posting --> Senioriry
-edge has_seniority

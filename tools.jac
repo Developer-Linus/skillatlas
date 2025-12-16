@@ -100,11 +100,3 @@ obj WebSearch {
         return job_nodes;
     }
 }
-
-with entry {
-   
-    web = WebSearch();
-    print(web.api_key);
-    results = web.search_job_postings("Junior Data analyst");
-    print(results);
-}
