@@ -79,27 +79,36 @@ Summarize a resume for professional understanding.
         the summary.
 """;
 
-impl extract_and_attach_skills.get_user_data{
-    return [root-->(`?UserData)][0];
-}
-
-impl extract_and_attach_skills.start{
-    if self.get_user_data() {
-        visit [here-->(`?UserData)];
-    } else {
-        report {"success": False, "error": "UserData not found"} ;
-    }
-}
-
 impl extract_and_attach_skills.extract{
-    user_data = self.get_user_data();
-    extracted_skills = self.extract_skills();
+    user_data = here;
+    if not user_data {
+        report {"success": False, "error": "UserData not found"} ;
+        disengage;
+    }
+    extracted_skills_specs = self.extract_skills(user_data);
     existing_user_skills = user_data.get_skills();
     existing_user_skill_names = [
         s["name"].lower().strip() for s in existing_user_skills
     ];
     newly_added_skills = [];
-    for skill_node in extracted_skills {
+    for spec in extracted_skills_specs {
+        # determine canonical_name using if/else
+        canon_name = "";
+        if spec.canonical_name != "" {
+            canon_name = spec.canonical_name;
+        } else {
+            canon_name = spec.name.lower().replace(" ", "_");
+        }
+
+        # create Skill node using jid
+        skill_node = Skill(
+            id=jid(spec),
+            name=spec.name,
+            canonical_name=canon_name,
+            category=spec.category
+        );
+
+        # add to user if not already present
         if not skill_node.name.lower() in existing_user_skill_names {
             user_data +>: has_skill(level=1) :+> skill_node;
             newly_added_skills.append(skill_node.name);
@@ -109,8 +118,14 @@ impl extract_and_attach_skills.extract{
         "success": True,
         "existing_skills": existing_user_skill_names,
         "newly_added_skills": newly_added_skills,
-        "total_skills_after_update": [s["name"] for s in user.get_skills()]
+        "total_skills_after_update": [s["name"] for s in user_data.get_skills()]
     } ;
+}
+
+impl extract_and_attach_skills.start{
+    visit [-->](`?UserData) else {
+        report {"success": False, "error": "User data not found!"} ;
+    }
 }
 
 sem extract_and_attach_skills. extract_skills= """
@@ -118,7 +133,7 @@ You extract the most relevant skills from the user’s resume text.
 
 Rules:
 1. ALWAYS call the tool get_resume_text() first to obtain cleaned resume text.
-2. Return ONLY the top, key skills that are most important for the user’s target roles.
+2. Return ONLY the top, key skills that are most important for the user’s target role.
 3. Return a LIST of Skill node OBJECTS: [SkillNode, SkillNode, ...].
 4. Do NOT return duplicates or irrelevant skills.
 5. If no relevant skills are found, return an empty list [].

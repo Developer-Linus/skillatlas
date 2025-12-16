@@ -1,15 +1,16 @@
 cl import from .....utils { fileToBase64 }
 cl import from react { useState }
 cl import from "@jac-client/utils" { Navigate, jacIsLoggedIn }
+import from backend.models.models { UserData }
 cl {
     def Onboarding()  -> any {
-        let [step, setStep] = useState(1);
-        let [email, setEmail] = useState("");
-        let [targetRole, setTargetRole] = useState("");
-        let [cvFile, setCvFile] = useState(None);
-        let [error, setError] = useState("");
-        let [success, setSuccess] = useState("");
-        let [loading, setLoading] = useState(False);
+        [step, setStep] = useState(1);
+        [email, setEmail] = useState("");
+        [targetRole, setTargetRole] = useState("");
+        [cvFile, setCvFile] = useState(None);
+        [error, setError] = useState("");
+        [success, setSuccess] = useState("");
+        [loading, setLoading] = useState(False);
 
         if not jacIsLoggedIn() {
             return <Navigate to="/login" />;
@@ -31,6 +32,7 @@ cl {
                     email=email, target_role=targetRole
                 );
                 if result.reports and result.reports[0]["success"] {
+                    user_node = result.reports[0]["user_node"];
                     setSuccess("Email and target role updated successfully!");
                     setStep(2);
                 } else {
@@ -74,7 +76,6 @@ cl {
 
                 uploadedPath = saveResult.reports[0]["path"];
 
-                # Parse resume
                 parseResult = root spawn resume_parser(uploaded_path=uploadedPath);
                 if not parseResult.reports
                 or parseResult.reports[0]["status"] != "success" {
@@ -84,11 +85,9 @@ cl {
                 }
 
                 cleanedText = parseResult.reports[0]["cleaned_resume_text"];
-                # Extract skills
-                extracted_skills = root spawn extract_and_attach_skills(
+                extracted_skills = await root spawn extract_and_attach_skills(
                     resume_parser_output=cleanedText
                 );
-                console.log(extracted_skills.reports[0]["total_skills_after_update"]);
                 setSuccess("CV uploaded and processed successfully!");
             } except Exception as e {
                 setError("Failed to upload or process your CV. Try again.");
@@ -97,6 +96,7 @@ cl {
             }
         }
 
+        # File input
         # File input
         def handleFileChange(e: any) -> None {
             if e.target.files.length > 0 {

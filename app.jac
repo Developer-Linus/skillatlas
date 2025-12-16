@@ -4,12 +4,10 @@ import time;
 import from dotenv { load_dotenv }
 import from byllm.lib { Model }
 import from backend.models.models { UserData, UserRole }
-import from backend.models.models { UserData, JobPosting, Skill }
+import from backend.models.models { UserData, JobPosting, Skill, SkillSpec }
 import from backend.edges.edges { has_skill }
 import from tools { WebSearch }
 import from backend.utils.cv_utils { ResumeUtils }
-
-cl import from "@jac-client/utils" { Router, Routes, Route }
 
 glob llm = Model(model_name="mistral/mistral-small-latest", verbose=False);
 
@@ -76,12 +74,12 @@ walker save_user_profile {
 
     can start with `root entry {
         visit [here-->(`?UserData)] else {
-            new_user = here ++> UserData(
+            new_user_data = here ++> UserData(
                 email=self.email,
                 role=UserRole.USER.value,
                 target_role=self.target_role
             );
-            visit [-->new_user];
+            visit [-->new_user_data];
         }
     }
 
@@ -89,10 +87,7 @@ walker save_user_profile {
         here.email = self.email;
         here.target_role = self.target_role;
 
-        report {
-            "success": True,
-            "user": {"email": here.email, "target_role": here.target_role}
-        } ;
+        report {"user_data_id": jid(here), "success": True, "user_node": here,} ;
     }
 }
 
@@ -176,47 +171,18 @@ walker collect_job_postings {
 
 walker extract_and_attach_skills {
     has resume_parser_output: str;
-    has target_role: str = "";
 
-    def get_user_data()  -> UserData;
     def get_resume_text()  -> str {
-        self.target_role = self.get_user_data().get_target_role();
-        return f" 'resume_parser_output: {self.resume_parser_output}, 'target_role: {self.target_role}";
+        user_data = here;
+        return f"resume_parser_output: {self.resume_parser_output}, target_role: {user_data.get_target_role()}";
     }
 
-    def extract_skills()  -> list[Skill] by llm(
-        method="ReAct", tools=([self.get_resume_text])
+    def extract_skills(profile_data: UserData) -> list[SkillSpec] by llm(
+        method="ReAct", tools=[self.get_resume_text]
     );
 
     can start with `root entry;
     can extract with UserData entry;
-}
-
-cl {
-    def app()  -> any {
-        return <Router>
-            <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-                <Routes>
-                    <Route
-                        path="/"
-                        element={<HomePage />}
-                    />
-                    <Route
-                        path="/login"
-                        element={<LoginPage />}
-                    />
-                    <Route
-                        path="/signup"
-                        element={<SignupPage />}
-                    />
-                    <Route
-                        path="/onboarding"
-                        element={<Onboarding />}
-                    />
-                </Routes>
-            </div>
-        </Router>;
-    }
 }
 
 with entry {

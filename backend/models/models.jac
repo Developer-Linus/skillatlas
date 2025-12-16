@@ -1,4 +1,5 @@
 import from backend.edges.edges { has_skill }
+import from backend.utils.current_time { get_current_time }
 enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
@@ -13,7 +14,7 @@ node UserData {
     has completed_courses: list[str] = [];
     has preferred_industries: list[str] = [];
     has learning_progress: dict[str, int] = {};
-    has created_at: str = "";
+    has created_at: str = get_current_time();
 
     def add_skill(skill_name: str, level: int) -> str;
     def update_skill(skill_name: str, level: int) -> str;
@@ -30,6 +31,12 @@ node UserData {
     def summarize_profile()  -> str by llm(
         method="ReAct", tools=([self.get_profile_snapshot])
     );
+}
+
+obj SkillSpec {
+    has name: str;
+    has canonical_name: str = "";
+    has category: str = "";
 }
 
 node Skill {

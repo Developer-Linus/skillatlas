@@ -10,6 +10,7 @@ function Onboarding() {
   let [error, setError] = useState("");
   let [success, setSuccess] = useState("");
   let [loading, setLoading] = useState(false);
+  let [userData, setUserData] = useState(null);
   if (!jacIsLoggedIn()) {
     return __jacJsx(Navigate, {"to": "/login"}, []);
   }
@@ -24,6 +25,8 @@ function Onboarding() {
     try {
       let result = await __jacSpawn("save_user_profile", "", {"email": email, "target_role": targetRole});
       if (result.reports && result.reports[0]["success"]) {
+        let user_node = result.reports[0]["user_node"];
+        setUserData(user_node);
         setSuccess("Email and target role updated successfully!");
         setStep(2);
       } else {
@@ -60,7 +63,7 @@ function Onboarding() {
       }
       let cleanedText = parseResult.reports[0]["cleaned_resume_text"];
       let extracted_skills = await __jacSpawn("extract_and_attach_skills", "", {"resume_parser_output": cleanedText});
-      console.log(extracted_skills.reports[0]["total_skills_after_update"]);
+      console.log(extracted_skills);
       setSuccess("CV uploaded and processed successfully!");
     } catch (e) {
       setError("Failed to upload or process your CV. Try again.");
