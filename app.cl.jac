@@ -1,8 +1,8 @@
 import ".styles.css";
 import from .frontend.pages.HomePage { HomePage }
-import from .frontend.components.auth.SignUp { SignupPage }
-import from .frontend.components.auth.Login { LoginPage }
-import from .frontend.components.onboarding.onboarding { Onboarding }
+import from .frontend.pages.auth.SignUp { SignupPage }
+import from .frontend.pages.auth.Login { LoginPage }
+import from .frontend.pages { Onboarding }
 import from "@jac-client/utils" { Router, Routes, Route }
 def app()  -> any {
     return <Router>

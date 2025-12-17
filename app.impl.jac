@@ -92,7 +92,6 @@ impl extract_and_attach_skills.extract{
     ];
     newly_added_skills = [];
     for spec in extracted_skills_specs {
-        # determine canonical_name using if/else
         canon_name = "";
         if spec.canonical_name != "" {
             canon_name = spec.canonical_name;
@@ -100,7 +99,6 @@ impl extract_and_attach_skills.extract{
             canon_name = spec.name.lower().replace(" ", "_");
         }
 
-        # create Skill node using jid
         skill_node = Skill(
             id=jid(spec),
             name=spec.name,
@@ -108,7 +106,6 @@ impl extract_and_attach_skills.extract{
             category=spec.category
         );
 
-        # add to user if not already present
         if not skill_node.name.lower() in existing_user_skill_names {
             user_data +>: has_skill(level=1) :+> skill_node;
             newly_added_skills.append(skill_node.name);
@@ -139,3 +136,123 @@ Rules:
 5. If no relevant skills are found, return an empty list [].
 6. Ensure each SkillNode has the correct name, optional canonical_name, and category fields populated.
 """;
+
+impl profile_manager.get_user_data{
+    return [root-->(`?UserData)][0];
+}
+
+impl profile_manager.get_profile_snapshot{
+    return self.get_user().get_profile_snapshot();
+}
+
+impl resume_parser.detect_resume_type{
+    return self.utils.detect_file_type(self.uploaded_path);
+}
+
+impl resume_parser.parse_resume{
+    output = {"text": "", "file_type": "", "status": "failed", "errors": []};
+    try {
+        file_type = self.detect_resume_type();
+        output["file_type"] = file_type;
+
+        if file_type == "" {
+            output["errors"].append("Could not detect file type");
+            return output;
+        }
+
+        text = self.utils.extract_text_temp(self.uploaded_path, file_type);
+        if text.strip() == "" {
+            output["errors"].append("Failed to extract text from resume");
+            return output;
+        }
+
+        output["text"] = text;
+        output["status"] = "success";
+    } except Exception as e {
+        output["errors"].append(str(e));
+    }
+    return output;
+}
+
+impl save_user_profile.start{
+    visit [here-->(`?UserData)] else {
+        new_user_data = here ++> UserData(
+            email=self.email, role=UserRole.USER.value, target_role=self.target_role
+        );
+        visit [-->new_user_data];
+    }
+}
+
+impl save_user_profile.update_email_and_targetrole{
+    here.email = self.email;
+    here.target_role = self.target_role;
+    report {"user_data_id": jid(here), "success": True, "user_node": here,} ;
+}
+
+impl store_cv_file.start{
+    if not os.path.exists(self.upload_dir) {
+        os.makedirs(self.upload_dir);
+    }
+    timestamp = str(int(time.time()));
+    final_path = os.path.join(self.upload_dir, timestamp + "_" + self.file_name);
+    try {
+        raw_bytes = base64.b64decode(self.file_data_b64);
+        with open(final_path, "wb") as f {
+            f.write(raw_bytes);
+        }
+
+        report {"status": "success", "path": final_path} ;
+    } except Exception as e {
+        report {"status": "error", "error": str(e)} ;
+    }
+}
+
+impl collect_job_postings.get_user_data{
+    return [root-->(`?UserData)][0];
+}
+
+impl collect_job_postings.start{
+    user_data = self.get_user_data();
+    target_role = user_data.get_target_role();
+    if not user_data {
+        report {"error": "UserData not found"} ;
+        disengage;
+    }
+    if not target_role {
+        report {"error": "User has no target role"} ;
+        disengage;
+    }
+    self.user_data = user_data;
+    self.target_role = user_data.target_role;
+}
+
+impl collect_job_postings.fetch_and_attach_jobs{
+    user_data = self.get_user_data();
+    web = WebSearch();
+    jobs = web.search_job_postings(self.target_role);
+    if len(jobs) == 0 {
+        report {"info": "No job postings found"} ;
+        disengage;
+    }
+    for job in jobs {
+        job_node = JobPosting(
+            job_uid=job["job_uid"],
+            title=job["title"],
+            company=job["company"],
+            location=job["location"],
+            employment_type=job["employment_type"],
+            description=job["description"],
+            posted_at=job["posted_at"],
+            source=job["source"],
+            salary=job["salary"]
+        );
+
+        user_data ++> job_node;
+    }
+    report {"attached_jobs": len(jobs), "target_role": self.target_role} ;
+}
+
+impl extract_and_attach_skills.get_resume_text{
+    user_data = here;
+    return f"resume_parser_output: {self.resume_parser_output}, target_role: {user_data.get_target_role()}";
+}
