@@ -86,9 +86,25 @@ walker compute_match_score {
     has target_role: Role;
     has user: UserData;
 
+    def extract_matching_skills(
+        user_skills: list[str], required_skills: list[str]
+    ) -> dict[str, any];
+
+    def extract_missing_skills(
+        user_skills: list[str], required_skills: list[str]
+    ) -> dict[str, any];
+
+    def get_matched_skills()  -> dict[str, any] by llm(
+        method="ReAct", tool=[self.extract_matching_skills]
+    );
+
+    def get_missing_skills()  -> dict[str, any] by llm(
+        method="ReAct", tool=[self.extract_missing_skills]
+    );
+
     def get_user_data()  -> UserData;
     can start with `root entry;
-    can calculate_score with `root entry;
+    can calculate_score with UserData entry;
 }
 
 with entry {

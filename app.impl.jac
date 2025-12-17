@@ -363,9 +363,112 @@ impl compute_match_score.start{
     }
     visit [-->user_data];
 }
+impl compute_match_score.extract_matching_skills{
+        matched_skills = [
+            s
+            for s in required_skills
+            if s in user_skills
+        ];
+        return {"number_of_matching_skills": len(matched_skills),
+        "matching_skills": matched_skills};
+    }
+impl compute_match_score.extract_missing_skills{
+        missing_skills = [
+            s
+            for s in required_skills
+            if s not in user_skills
+        ];
+        return {"number_of_missing_skills": len(missing_skills),
+        "missing_skills": missing_skills};
+    }
+sem compute_match_score.get_matched_skills = """
+    1. Input:
+       - user_skills: list of user's skills (strings)
+       - required_skills: list of skills required for the target role (strings)
+
+    2. Task:
+       - Use **semantic similarity** to compare user_skills with required_skills.
+       - Identify which required skills are **already matched** by the user's skills.
+       - You may call `extract_matching_skills(user_skills, required_skills)` to assist.
+
+    3. Output:
+       - Return a dictionary with:
+         {
+             "number_of_matching_skills": int,  # count of matched skills
+             "matching_skills": list[str]       # list of matched skills
+         }
+       - Do not include explanations or extra text.
+       - Only include semantically relevant matches.
+
+    4. Goal:
+       - Provide structured data for computing the overall match score and for dashboard display.
+""";
 
 impl compute_match_score.calculate_score{
-    user_skills = [
-        s.name.lower().strip() for s in self.user.skills
+    user_data = here;
+    user_skills = [s["name"].lower().strip() for s in self.user_data.get_skills()];
+    required_skills = [
+        s["canonical_name"].lower().strip() if s["canonical_name"] != "" else s["name"].lower().strip()
+        for s in self.target_role.skill_requirements
     ];
- }
+
+    # Find matched and missing skills
+    number_of_matched_skills = self.get_matched_skills()["number_of_matching_skills"];
+    matched_skills = self.get_matched_skills()["matching_skills"];
+
+    number_of_missing_skills = self.get_missing_skills()["number_of_missing_skills"];
+     missing_skills = self.get_missing_skills()["missing_skills"];
+
+    # Compute match score (0–100%)
+    score_value = float(len(matched_skills)) / max(len(required_skills), 1);
+    score_percentage = score_value * 100.0;
+    explanation = "";
+   if score_percentage >= 90.0 {
+    explanation = "Excellent! You already have nearly all the skills needed for this role. You're very well-prepared!";
+} elif score_percentage >= 70.0 {
+    explanation = "You're doing well! You have most of the key skills, but there are a few areas you could improve.";
+} elif score_percentage >= 40.0 {
+    explanation = "You have a good starting point, but several important skills are missing. Focusing on these will boost your match.";
+} else {
+    explanation = "You're just getting started. Consider building foundational skills to better align with this role.";
+}
+
+    # Create MatchScore node
+    match_node = MatchScore(
+        score_value=score_value,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        explanation=explanation
+    );
+
+    user_data ++> match_node;
+    # Report the result
+    report {
+        "score_value": match_node.score_value,
+        "matched_skills": match_node.matched_skills,
+        "missing_skills": match_node.missing_skills,
+        "explanation": match_node.explanation
+    };
+}
+sem compute_match_score.get_missing_skills = """
+1. Input:
+       - user_skills: list of user's skills (strings)
+       - required_skills: list of skills required for the target role (strings)
+
+    2. Task:
+       - Use **semantic similarity** to compare user_skills with required_skills.
+       - Identify which required skills are **missing** from the user's skill set.
+       - You may call `extract_missing_skills(user_skills, required_skills)` to assist.
+
+    3. Output:
+       - Return a dictionary with:
+         {
+             "number_of_missing_skills": int,  # count of missing skills
+             "missing_skills": list[str]       # list of missing skills
+         }
+       - Do not include explanations or extra text.
+       - Only include semantically relevant missing skills.
+
+    4. Goal:
+       - Provide structured data for computing the overall match score and for dashboard display.
+""";
