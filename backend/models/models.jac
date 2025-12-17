@@ -47,11 +47,21 @@ node Skill {
     has category: str = "";
 }
 
+obj RoleSpec {
+    has name: str;
+    has description: str;
+    has seniority_level: SeniorityLevel;
+    has industry: list[SkillSpec] = [];
+    has skill_requirements: list[SkillSpec] = [];
+}
+
 node Role {
     has id: str;
     has name: str;
+    has seniority_level: SeniorityLevel.JUNIOR.value;
     has description: str = "";
-    has industry: str = "";
+    has industry: list[str] = "";
+    has skill_requirements: list[Skill] = [];
 }
 
 node Course {

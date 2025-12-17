@@ -4,7 +4,7 @@ import time;
 import from dotenv { load_dotenv }
 import from byllm.lib { Model }
 import from backend.models.models { UserData, UserRole }
-import from backend.models.models { UserData, JobPosting, Skill, SkillSpec }
+import from backend.models.models { UserData, JobPosting, Skill, SkillSpec, RoleSpec }
 import from backend.edges.edges { has_skill }
 import from tools { WebSearch }
 import from backend.utils.cv_utils { ResumeUtils }
@@ -54,7 +54,20 @@ walker collect_job_postings {
 
     def get_user_data()  -> UserData;
     can start with `root entry;
-    can fetch_and_attach_jobs with `root entry;
+    can fetch_and_attach_jobs with UserData entry;
+}
+
+walker extract_target_role_requirements {
+    has target_role: str;
+
+    def get_user_data()  -> UserData;
+    def get_job_postings()  -> list[JobPosting];
+    def get_role_requirements(
+        target_role: Role, job_descriptions: list[str]
+    ) -> RoleSpec by llm(method="ReAct", tools=[self.get_job_postings]);
+
+    can start with `root entry;
+    can extract_requirements with UserData entry;
 }
 
 walker extract_and_attach_skills {
@@ -67,6 +80,15 @@ walker extract_and_attach_skills {
 
     can start with `root entry;
     can extract with UserData entry;
+}
+
+walker compute_match_score {
+    has target_role: Role;
+    has user: UserData;
+
+    def get_user_data()  -> UserData;
+    can start with `root entry;
+    can calculate_score with `root entry;
 }
 
 with entry {

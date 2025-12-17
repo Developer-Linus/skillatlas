@@ -20,8 +20,6 @@ edge requires_skill {
     def update_required_level(new_level: int) -> None;
 }
 
-edge in_industry {}
-
 edge teaches_skill {}
 
 edge prepares_for {}

@@ -214,21 +214,20 @@ impl collect_job_postings.get_user_data{
 
 impl collect_job_postings.start{
     user_data = self.get_user_data();
-    target_role = user_data.get_target_role();
-    if not user_data {
-        report {"error": "UserData not found"} ;
-        disengage;
-    }
+    self.target_role = user_data.get_target_role();
     if not target_role {
         report {"error": "User has no target role"} ;
         disengage;
     }
-    self.user_data = user_data;
-    self.target_role = user_data.target_role;
+    if not user_data {
+        report {"error": "UserData not found"} ;
+        disengage;
+    }
+    visit [-->user_data];
 }
 
 impl collect_job_postings.fetch_and_attach_jobs{
-    user_data = self.get_user_data();
+    user_data = here;
     web = WebSearch();
     jobs = web.search_job_postings(self.target_role);
     if len(jobs) == 0 {
@@ -250,10 +249,123 @@ impl collect_job_postings.fetch_and_attach_jobs{
 
         user_data ++> job_node;
     }
-    report {"attached_jobs": len(jobs), "target_role": self.target_role} ;
+    job_listings = [user_data-->(`?JobPosting)];
+    report {
+        "target_role": self.target_role,
+        "attached_jobs": len(jobs),
+        "jobs": job_listings
+    } ;
 }
+
+impl extract_target_role_requirements.get_user_data{
+    return [root-->(`?UserData)][0];
+}
+
+impl extract_target_role_requirements.get_job_postings{
+    user_data = self.get_user_data();
+    return [user_data-->(`?JobPosting)];
+}
+
+impl extract_target_role_requirements.start{
+    user_data = self.get_user_data();
+    self.target_role = user_data.get_target_role();
+    if not user_data {
+        report {"error": "UserData not found"} ;
+        disengage;
+    }
+    if not self.target_role {
+        report {"error": "User has no target role"} ;
+        disengage;
+    }
+    visit [-->user_data];
+}
+
+impl extract_target_role_requirements.extract_requirements{
+    user_data = here;
+    jobs = self.get_job_postings();
+    if len(jobs) == 0 {
+        report {"info": "No job postings found for extraction"} ;
+        disengage;
+    }
+    job_texts = [job.description for job in jobs];
+    role_data = self.get_role_requirements(
+        target_role=self.target_role, job_descriptions=job_texts
+    );
+    role_node = Role(
+        id=jid(role_data),
+        name=self.target_role,
+        seniority_level=role_data.seniority_level,
+        description=role_data.description,
+        industry=role_data.industries,
+        skill_requirements=role_data.required_skills
+    );
+    user_data ++> role_node;
+    report {
+        "role_id": role_node.id,
+        "role_name": role_node.name,
+        "skills_extracted": role_node.skill_requirements,
+        "industries": role_node.industry
+    } ;
+}
+
+sem extract_target_role_requirements. get_role_requirements= """
+        Instruction for the LLM:
+
+    1. Input:
+       - target_role: role name/title
+       - job_descriptions: list of raw job posting texts
+
+    2. Task:
+       - Extract **role requirements** from the job descriptions.
+       - Aggregate and deduplicate skills and industries.
+
+    3. Output: **exactly** a RoleSpec object with:
+       {
+         "name": <role name>,
+         "description": <concise summary of role responsibilities>,
+         "seniority_level": <junior|mid|senior>,
+         "industry": [<SkillSpec>, ...],
+         "skill_requirements": [<SkillSpec>, ...] # max 10 items
+       }
+
+    4. Rules:
+       - For `industry` and `skill_requirements`, return SkillSpec nodes only.
+       - Deduplicate repeated skills or industries.
+       - Include only practical, observable skills from the text.
+       - Ignore company perks, salaries, or boilerplate.
+       - Return **RoleSpec object only**; no explanations, no extra text.
+       - Preserve canonical skill names if available.
+
+    5. Goal:
+       - Produce a clean, deterministic RoleSpec that can be persisted in Jac
+         and used for skill matching and dashboard display.
+    """;
 
 impl extract_and_attach_skills.get_resume_text{
     user_data = here;
     return f"resume_parser_output: {self.resume_parser_output}, target_role: {user_data.get_target_role()}";
 }
+
+impl compute_match_score.get_user_data{
+    return [root-->(`?UserData)][0];
+}
+
+impl compute_match_score.start{
+    user_data = self.get_user_data;
+    self.target_role = user.get_target_role();
+    if not user_data {
+        report {"error": "UserData not found"} ;
+        disengage;
+    }
+    if not self.target_role {
+        report {"error": "User has no target role"} ;
+        disengage;
+    }
+    visit [-->user_data];
+}
+
+impl compute_match_score.calculate_score{
+    user_skills = [
+        s.name.lower().strip() for s in self.user.skills
+    ];
+ }
