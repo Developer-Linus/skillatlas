@@ -1,7 +1,6 @@
-cl import from .....utils { fileToBase64 }
+cl import from ....utils { fileToBase64 }
 cl import from react { useState }
 cl import from "@jac-client/utils" { Navigate, jacIsLoggedIn }
-import from backend.models.models { UserData }
 cl {
     def Onboarding()  -> any {
         [step, setStep] = useState(1);
@@ -15,8 +14,6 @@ cl {
         if not jacIsLoggedIn() {
             return <Navigate to="/login" />;
         }
-
-        # Step 1: Save user profile
         async def handleStep1Submit(e: any) -> None {
             e.preventDefault();
             setError("");
@@ -42,8 +39,6 @@ cl {
                 setError("Failed to update profile. Try again.");
             }
         }
-
-        # Step 2: Upload CV
         async def handleStep2Submit(e: any) -> None {
             e.preventDefault();
             setError("");
@@ -58,8 +53,6 @@ cl {
 
             try {
                 base64Data = await fileToBase64(cvFile);
-
-                # Save file
                 saveResult = root spawn store_cv_file(
                     file_name=cvFile.name, file_data_b64=base64Data
                 );
@@ -96,15 +89,12 @@ cl {
             }
         }
 
-        # File input
-        # File input
         def handleFileChange(e: any) -> None {
             if e.target.files.length > 0 {
                 setCvFile(e.target.files[0]);
             }
         }
 
-        # Back button
         def handleBack()  -> None {
             setStep(1);
             setCvFile(None);

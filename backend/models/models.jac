@@ -37,6 +37,7 @@ obj SkillSpec {
     has name: str;
     has canonical_name: str = "";
     has category: str = "";
+    has current_level: int = 1;
 }
 
 node Skill {

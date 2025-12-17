@@ -107,7 +107,7 @@ impl extract_and_attach_skills.extract{
         );
 
         if not skill_node.name.lower() in existing_user_skill_names {
-            user_data +>: has_skill(level=1) :+> skill_node;
+            user_data +>: has_skill(level=spec.current_level) :+> skill_node;
             newly_added_skills.append(skill_node.name);
         }
     }
@@ -132,9 +132,10 @@ Rules:
 1. ALWAYS call the tool get_resume_text() first to obtain cleaned resume text.
 2. Return ONLY the top, key skills that are most important for the user’s target role.
 3. Return a LIST of Skill node OBJECTS: [SkillNode, SkillNode, ...].
-4. Do NOT return duplicates or irrelevant skills.
-5. If no relevant skills are found, return an empty list [].
-6. Ensure each SkillNode has the correct name, optional canonical_name, and category fields populated.
+4. Assign current_level (1–5) per skill based on confidence inferred from resume evidence (projects, roles, duration, ownership). Rate practical confidence as a career advisor for user's target role.
+5. Do NOT return duplicates or irrelevant skills.
+6. If no relevant skills are found, return an empty list [].
+7. Ensure each SkillNode has the correct name, current_level, optional canonical_name, and category fields populated.
 """;
 
 impl profile_manager.get_user_data{

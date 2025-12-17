@@ -1,9 +1,10 @@
-import ".styles.css";
-import from .frontend.pages.HomePage { HomePage }
-import from .frontend.pages.auth.SignUp { SignupPage }
-import from .frontend.pages.auth.Login { LoginPage }
-import from .frontend.pages { Onboarding }
 import from "@jac-client/utils" { Router, Routes, Route }
+import ".styles.css";
+import from .frontend.pages.homepage { HomePage }
+import from .frontend.pages.auth.signup { SignupPage }
+import from .frontend.pages.auth.login { LoginPage }
+import from .frontend.pages.onboarding { Onboarding }
+
 def app()  -> any {
     return <Router>
         <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">

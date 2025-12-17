@@ -6,7 +6,6 @@ cl import from "@jac-client/utils" {
     jacIsLoggedIn,
     jacLogout
 }
-cl import from ..onboarding.onboarding { Onboarding }
 
 cl {
     def SignupPage()  -> any {
