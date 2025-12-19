@@ -41,7 +41,6 @@ obj SkillSpec {
 }
 
 node Skill {
-    has id: str;
     has name: str;
     has canonical_name: str = "";
     has category: str = "";
@@ -56,7 +55,6 @@ obj RoleSpec {
 }
 
 node Role {
-    has id: str;
     has name: str;
     has seniority_level: SeniorityLevel.JUNIOR.value;
     has description: str = "";
@@ -65,7 +63,6 @@ node Role {
 }
 
 node Course {
-    has id: str;
     has title: str;
     has provider: str;
     has skills_taught: list[str];
@@ -87,7 +84,6 @@ node JobPosting {
 }
 
 node Certification {
-    has id: str;
     has name: str;
     has issurer: str;
     has skills_tested: str;

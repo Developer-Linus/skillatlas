@@ -78,11 +78,18 @@ cl {
                 }
 
                 cleanedText = parseResult.reports[0]["cleaned_resume_text"];
-                extracted_skills = await root spawn extract_and_attach_skills(
-                    resume_parser_output=cleanedText
-                );
-                console.log(extracted_skills);
-                setSuccess("CV uploaded and processed successfully!");
+                try {
+                    extracted_skills = await root spawn extract_and_attach_skills(
+                        resume_parser_output=cleanedText
+                    );
+                    console.log(extracted_skills);
+                    setSuccess("CV uploaded and processed successfully!");
+                    window.location.href = "/page/app#/dashboard";
+                } except Exception as e {
+                    setError("Skill extraction failed. Retry uploading CV again.");
+                    setStep(2);
+                    disengage;
+                }
             } except Exception as e {
                 setError("Failed to upload or process your CV. Try again.");
             } finally {

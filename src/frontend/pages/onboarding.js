@@ -60,9 +60,15 @@ function Onboarding() {
         return;
       }
       let cleanedText = parseResult.reports[0]["cleaned_resume_text"];
-      let extracted_skills = await __jacSpawn("extract_and_attach_skills", "", {"resume_parser_output": cleanedText});
-      console.log(extracted_skills);
-      setSuccess("CV uploaded and processed successfully!");
+      try {
+        let extracted_skills = await __jacSpawn("extract_and_attach_skills", "", {"resume_parser_output": cleanedText});
+        console.log(extracted_skills);
+        setSuccess("CV uploaded and processed successfully!");
+        window.location.href = "/page/app#/dashboard";
+      } catch (e) {
+        setError("Skill extraction failed. Retry uploading CV again.");
+        setStep(2);
+      }
     } catch (e) {
       setError("Failed to upload or process your CV. Try again.");
     } finally {

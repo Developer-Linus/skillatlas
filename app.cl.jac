@@ -4,6 +4,7 @@ import from .frontend.pages.homepage { HomePage }
 import from .frontend.pages.auth.signup { SignupPage }
 import from .frontend.pages.auth.login { LoginPage }
 import from .frontend.pages.onboarding { Onboarding }
+import from .frontend.pages.dashboard { DashboardPage }
 
 def app()  -> any {
     return <Router>
@@ -24,6 +25,10 @@ def app()  -> any {
                 <Route
                     path="/onboarding"
                     element={<Onboarding />}
+                />
+                <Route
+                    path="/dashboard"
+                    element={<DashboardPage />}
                 />
             </Routes>
         </div>

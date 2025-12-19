@@ -27,7 +27,7 @@ impl UserData.get_skills{
     skill_nodes = [self-->(`?Skill)];
     skills_list = [];
     for s in skill_nodes {
-        skills_list += [{"id": s.id, "name": s.name,}];
+        skills_list += [{"name": s.name,}];
     }
     return skills_list;
 }

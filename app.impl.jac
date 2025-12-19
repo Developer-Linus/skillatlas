@@ -40,7 +40,7 @@ The example summary paragraph can be:
 "The user is currently a Junior Data Analyst with no prior work experience. They have foundational skills in Python (level 3) and introductory knowledge in Machine Learning (level 1). They are actively progressing in Python and Machine Learning and are targeting roles as a Mid Data Analyst. They have not completed any formal courses yet and have no specific preferred industries."
 """;
 impl resume_parser.get_user_data{
-    return [root-->(`?UserData)];
+    return [root-->(`?UserData)][0];
 }
 impl resume_parser.execute{
     user_data = self.get_user_data();
@@ -105,7 +105,6 @@ impl extract_and_attach_skills.extract{
         }
 
         skill_node = Skill(
-            id=jid(spec),
             name=spec.name,
             canonical_name=canon_name,
             category=spec.category
@@ -297,7 +296,6 @@ impl extract_target_role_requirements.extract_requirements{
         target_role=self.target_role, job_descriptions=job_texts
     );
     role_node = Role(
-        id=jid(role_data),
         name=self.target_role,
         seniority_level=role_data.seniority_level,
         description=role_data.description,
@@ -306,7 +304,6 @@ impl extract_target_role_requirements.extract_requirements{
     );
     user_data ++> role_node;
     report {
-        "role_id": role_node.id,
         "role_name": role_node.name,
         "skills_extracted": role_node.skill_requirements,
         "industries": role_node.industry
