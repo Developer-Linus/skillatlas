@@ -5,3 +5,4 @@ dist/
 .venv/
 app.session
 app.session.users.json
+uploads/
