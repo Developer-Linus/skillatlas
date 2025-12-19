@@ -39,16 +39,21 @@ For a user with the following snapshot:
 The example summary paragraph can be:
 "The user is currently a Junior Data Analyst with no prior work experience. They have foundational skills in Python (level 3) and introductory knowledge in Machine Learning (level 1). They are actively progressing in Python and Machine Learning and are targeting roles as a Mid Data Analyst. They have not completed any formal courses yet and have no specific preferred industries."
 """;
-
+impl resume_parser.get_user_data{
+    return [root-->(`?UserData)];
+}
 impl resume_parser.execute{
+    user_data = self.get_user_data();
     parsed = self.parse_resume();
     summary = self.summarize_resume();
+    user_data.resume_summary = summary;
     report {
         "file_type": parsed["file_type"],
         "status": parsed["status"],
         "errors": parsed["errors"],
         "cleaned_resume_text": parsed["text"],
-        "resume_summary": summary
+        "resume_summary": summary,
+        "user_resume_summary": user_data.resume_summary
     } ;
 }
 
@@ -351,16 +356,24 @@ impl compute_match_score.get_user_data{
 }
 
 impl compute_match_score.start{
-    user_data = self.get_user_data;
-    self.target_role = user.get_target_role();
+    user_data = self.get_user_data();
     if not user_data {
         report {"error": "UserData not found"} ;
         disengage;
     }
-    if not self.target_role {
+    self.user_data = user_data;
+    role_name = user_data.get_user_role();
+    if not role_name {
         report {"error": "User has no target role"} ;
         disengage;
     }
+    role_nodes = [root -->(`?Role: name==role_name)];
+    if not role_nodes{
+        report {"error": "Target Role node not found"};
+        disengage;
+    }
+    self.target_role = role_nodes[0];
+
     visit [-->user_data];
 }
 impl compute_match_score.extract_matching_skills{
@@ -403,37 +416,40 @@ sem compute_match_score.get_matched_skills = """
     4. Goal:
        - Provide structured data for computing the overall match score and for dashboard display.
 """;
-
 impl compute_match_score.calculate_score{
     user_data = here;
+
+    # Normalize skill names
     user_skills = [s["name"].lower().strip() for s in self.user_data.get_skills()];
     required_skills = [
         s["canonical_name"].lower().strip() if s["canonical_name"] != "" else s["name"].lower().strip()
         for s in self.target_role.skill_requirements
     ];
 
-    # Find matched and missing skills
-    number_of_matched_skills = self.get_matched_skills()["number_of_matching_skills"];
-    matched_skills = self.get_matched_skills()["matching_skills"];
+    # Compute matched and missing skills once
+    matched_result = self.get_matched_skills(user_skills=user_skills, required_skills=required_skills);
+    missing_result = self.get_missing_skills(user_skills=user_skills, required_skills=required_skills);
 
-    number_of_missing_skills = self.get_missing_skills()["number_of_missing_skills"];
-     missing_skills = self.get_missing_skills()["missing_skills"];
+    matched_skills = matched_result["matching_skills"];
+    missing_skills = missing_result["missing_skills"];
 
-    # Compute match score (0–100%)
+    # Compute score (0–100%)
     score_value = float(len(matched_skills)) / max(len(required_skills), 1);
     score_percentage = score_value * 100.0;
-    explanation = "";
-   if score_percentage >= 90.0 {
-    explanation = "Excellent! You already have nearly all the skills needed for this role. You're very well-prepared!";
-} elif score_percentage >= 70.0 {
-    explanation = "You're doing well! You have most of the key skills, but there are a few areas you could improve.";
-} elif score_percentage >= 40.0 {
-    explanation = "You have a good starting point, but several important skills are missing. Focusing on these will boost your match.";
-} else {
-    explanation = "You're just getting started. Consider building foundational skills to better align with this role.";
-}
 
-    # Create MatchScore node
+    # Provide explanation based on percentage
+    explanation = "";
+    if score_percentage >= 90.0 {
+        explanation = "Excellent! You already have nearly all the skills needed for this role. You're very well-prepared!";
+    } elif score_percentage >= 70.0 {
+        explanation = "You're doing well! You have most of the key skills, but there are a few areas you could improve.";
+    } elif score_percentage >= 40.0 {
+        explanation = "You have a good starting point, but several important skills are missing. Focusing on these will boost your match.";
+    } else {
+        explanation = "You're just getting started. Consider building foundational skills to better align with this role.";
+    }
+
+    # Create MatchScore node and attach to user
     match_node = MatchScore(
         score_value=score_value,
         matched_skills=matched_skills,
@@ -442,7 +458,8 @@ impl compute_match_score.calculate_score{
     );
 
     user_data ++> match_node;
-    # Report the result
+
+    # Return structured result for frontend
     report {
         "score_value": match_node.score_value,
         "matched_skills": match_node.matched_skills,

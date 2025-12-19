@@ -9,7 +9,7 @@ cl {
         [cvFile, setCvFile] = useState(None);
         [error, setError] = useState("");
         [success, setSuccess] = useState("");
-        [loading, setLoading] = useState(False);
+        [loading, setLoading] = useState(false);
 
         if not jacIsLoggedIn() {
             return <Navigate to="/login" />;
@@ -43,11 +43,11 @@ cl {
             e.preventDefault();
             setError("");
             setSuccess("");
-            setLoading(True);
+            setLoading(true);
 
             if not cvFile {
                 setError("Please select a CV file to upload.");
-                setLoading(False);
+                setLoading(false);
                 return;
             }
 
@@ -63,7 +63,7 @@ cl {
                             saveResult.reports[0]["error"] or "unknown error"
                         )
                     );
-                    setLoading(False);
+                    setLoading(false);
                     return;
                 }
 
@@ -73,7 +73,7 @@ cl {
                 if not parseResult.reports
                 or parseResult.reports[0]["status"] != "success" {
                     setError("Failed to parse CV.");
-                    setLoading(False);
+                    setLoading(false);
                     return;
                 }
 
@@ -81,11 +81,12 @@ cl {
                 extracted_skills = await root spawn extract_and_attach_skills(
                     resume_parser_output=cleanedText
                 );
+                console.log(extracted_skills);
                 setSuccess("CV uploaded and processed successfully!");
             } except Exception as e {
                 setError("Failed to upload or process your CV. Try again.");
             } finally {
-                setLoading(False);
+                setLoading(false);
             }
         }
 

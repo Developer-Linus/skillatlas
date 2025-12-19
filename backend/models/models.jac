@@ -8,7 +8,7 @@ node UserData {
     has email: str;
     has role: UserRole.USER.value;
     has target_role: str;
-    has current_position: str = "";
+    has resume_summary: str = "";
     has experience_years: int = 0;
     has bio: str = "";
     has completed_courses: list[str] = [];

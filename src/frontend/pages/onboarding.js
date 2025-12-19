@@ -61,6 +61,7 @@ function Onboarding() {
       }
       let cleanedText = parseResult.reports[0]["cleaned_resume_text"];
       let extracted_skills = await __jacSpawn("extract_and_attach_skills", "", {"resume_parser_output": cleanedText});
+      console.log(extracted_skills);
       setSuccess("CV uploaded and processed successfully!");
     } catch (e) {
       setError("Failed to upload or process your CV. Try again.");

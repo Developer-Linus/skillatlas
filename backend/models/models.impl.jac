@@ -1,6 +1,5 @@
 impl UserData.get_basic_info{
     return {
-        "id": self.id,
         "email": self.email,
         "current_position": self.current_position,
         "experience_years": self.experience_years,
@@ -37,7 +36,7 @@ impl UserData.get_profile_snapshot{
     return {
         "basic_info": self.get_basic_info(),
         "skills": self.get_skills(),
-        "target_roles": self.get_target_roles(),
+        "target_role": self.get_target_role(),
         "completed_courses": self.get_completed_courses(),
         "preferred_industries": self.get_preferred_industries(),
         "learning_progress": self.get_learning_progress()
