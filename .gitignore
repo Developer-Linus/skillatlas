@@ -6,3 +6,4 @@ dist/
 app.session
 app.session.users.json
 uploads/
+sample_resumes/
