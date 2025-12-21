@@ -112,10 +112,17 @@ node Trend {
     has affected_roles: list[str];
 }
 
+node LearningPhase {
+    has phase_name: str;
+    has skills: list[str];
+    has resources: list[str];
+    has estimated_time: str;
+}
+
 node LearningPath {
     has target_role: str;
     has missing_skills: list[str];
-    has phases: list[dict];
+    has phases: list[LearningPhase];
     has resources: list[dict];
 }
 

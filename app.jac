@@ -13,7 +13,9 @@ import from backend.models.models {
     Role,
     MatchScore,
     MatchResult,
-    MissingSkillsResult
+    MissingSkillsResult,
+    LearningPhase,
+    LearningPath
 }
 import from backend.edges.edges { has_skill }
 import from tools { WebSearch }
@@ -122,7 +124,18 @@ walker get_dashboard_data {
     can collect with UserData entry;
 }
 
+walker recommend_learning_path {
+    has target_role: str;
+    has missing_skills: list[str];
 
+    def get_user_data()  -> UserData;
+    def build_learning_phases(
+        missing_skills: list[str], resources: list[dict]
+    ) -> list[LearningPhase] by llm();
+
+    can start with `root entry;
+    can fetch_and_attach_learning_path with UserData entry;
+}
 
 with entry {
     load_dotenv();
