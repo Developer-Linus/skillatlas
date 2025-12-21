@@ -7,9 +7,7 @@ function LoginPage() {
   let [error, setError] = useState("");
   let [success, setSuccess] = useState("");
   if (jacIsLoggedIn()) {
-    return __jacJsx("div", {"className": "flex flex-col items-center justify-center min-h-screen p-6"}, [__jacJsx("h2", {"className": "section-heading"}, ["You're already logged in!"]), __jacJsx("button", {"className": "nav-button nav-button-logout mt-4", "onClick": () => {
-      jacLogout();
-    }}, ["Logout"])]);
+    return __jacJsx("div", {"className": "flex flex-col items-center justify-center min-h-screen p-6"}, [__jacJsx("h2", {"className": "section-heading"}, ["You're already logged in!"]), __jacJsx(Navigate, {"to": "/login"}, [])]);
   }
   async function handleLogin(e) {
     e.preventDefault();
@@ -22,7 +20,7 @@ function LoginPage() {
     let successLogin = await jacLogin(email, password);
     if (successLogin) {
       setSuccess("Login successful! Redirecting...");
-      window.location.href = "/page/app#/";
+      window.location.href = "/page/app#/dashboard";
     } else {
       setError("Invalid email or password.");
     }

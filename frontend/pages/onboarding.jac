@@ -82,7 +82,6 @@ cl {
                     extracted_skills = await root spawn extract_and_attach_skills(
                         resume_parser_output=cleanedText
                     );
-                    console.log(extracted_skills);
                     setSuccess("CV uploaded and processed successfully!");
                     window.location.href = "/page/app#/dashboard";
                 } except Exception as e {

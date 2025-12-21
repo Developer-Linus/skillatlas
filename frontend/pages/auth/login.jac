@@ -13,12 +13,7 @@ cl {
                 <h2 className="section-heading">
                     You're already logged in!
                 </h2>
-                <button
-                    className="nav-button nav-button-logout mt-4"
-                    onClick={lambda   -> None{ jacLogout();} }
-                >
-                    Logout
-                </button>
+                <Navigate to="/login" />
             </div>;
         }
 
@@ -36,7 +31,7 @@ cl {
 
             if successLogin {
                 setSuccess("Login successful! Redirecting...");
-                window.location.href = "/page/app#/";
+                window.location.href = "/page/app#/dashboard";
             } else {
                 setError("Invalid email or password.");
             }

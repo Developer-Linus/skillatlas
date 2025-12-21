@@ -32,6 +32,14 @@ node UserData {
         method="ReAct", tools=([self.get_profile_snapshot])
     );
 }
+obj MatchResult {
+    has number_of_matching_skills: int;
+    has matching_skills: list[str];
+}
+obj MissingSkillsResult {
+    has number_of_missing_skills: int;
+    has missing_skills: list[str];
+}
 
 obj SkillSpec {
     has name: str;
@@ -49,14 +57,14 @@ node Skill {
 obj RoleSpec {
     has name: str;
     has description: str;
-    has seniority_level: SeniorityLevel;
+    has seniority_level: str;
     has industry: list[SkillSpec] = [];
     has skill_requirements: list[SkillSpec] = [];
 }
 
 node Role {
     has name: str;
-    has seniority_level: SeniorityLevel.JUNIOR.value;
+    has seniority_level: SeniorityLevel;
     has description: str = "";
     has industry: list[str] = "";
     has skill_requirements: list[Skill] = [];

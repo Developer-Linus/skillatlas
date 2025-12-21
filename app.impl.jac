@@ -90,7 +90,7 @@ impl extract_and_attach_skills.extract{
         report {"success": False, "error": "UserData not found"} ;
         disengage;
     }
-    extracted_skills_specs = self.extract_skills(user_data);
+    extracted_skills_specs = self.extract_skills(resume_text=self.resume_parser_output);
     existing_user_skills = user_data.get_skills();
     existing_user_skill_names = [
         s["name"].lower().strip() for s in existing_user_skills
@@ -130,17 +130,7 @@ impl extract_and_attach_skills.start{
 }
 
 sem extract_and_attach_skills. extract_skills= """
-You extract the most relevant skills from the user’s resume text.
-
-Rules:
-1. ALWAYS call the tool get_resume_text() first to obtain cleaned resume text.
-2. Return ONLY the top, key skills that are most important for the user’s target role.
-3. Return a LIST of Skill node OBJECTS: [SkillNode, SkillNode, ...].
-4. Assign current_level (1–5) per skill based on confidence inferred from resume evidence (projects, roles, duration, ownership). Rate practical confidence as a career advisor for user's target role.
-5. Do NOT return duplicates or irrelevant skills.
-6. If no relevant skills are found, return an empty list [].
-7. Ensure each SkillNode has the correct name, current_level, optional canonical_name, and category fields populated.
-""";
+Extract exactly 5-10 professional skills from the resume text.For each skill, evaluate the 'current_level' (1-5) based on experience. Return a flat list of SkillSpec objects. Do not include thinking or text.""";
 
 impl profile_manager.get_user_data{
     return [root-->(`?UserData)][0];
@@ -219,7 +209,7 @@ impl collect_job_postings.get_user_data{
 impl collect_job_postings.start{
     user_data = self.get_user_data();
     self.target_role = user_data.get_target_role();
-    if not target_role {
+    if not self.target_role {
         report {"error": "User has no target role"} ;
         disengage;
     }
@@ -256,8 +246,7 @@ impl collect_job_postings.fetch_and_attach_jobs{
     job_listings = [user_data-->(`?JobPosting)];
     report {
         "target_role": self.target_role,
-        "attached_jobs": len(jobs),
-        "jobs": job_listings
+        "attached_jobs": len(jobs)
     } ;
 }
 
@@ -299,8 +288,8 @@ impl extract_target_role_requirements.extract_requirements{
         name=self.target_role,
         seniority_level=role_data.seniority_level,
         description=role_data.description,
-        industry=role_data.industries,
-        skill_requirements=role_data.required_skills
+        industry=role_data.industry,
+        skill_requirements=role_data.skill_requirements
     );
     user_data ++> role_node;
     report {
@@ -311,37 +300,19 @@ impl extract_target_role_requirements.extract_requirements{
 }
 
 sem extract_target_role_requirements. get_role_requirements= """
-        Instruction for the LLM:
+You are a precise data extraction agent. From the provided job descriptions, extract requirements for the target role and populate a RoleSpec object.
 
-    1. Input:
-       - target_role: role name/title
-       - job_descriptions: list of raw job posting texts
-
-    2. Task:
-       - Extract **role requirements** from the job descriptions.
-       - Aggregate and deduplicate skills and industries.
-
-    3. Output: **exactly** a RoleSpec object with:
-       {
-         "name": <role name>,
-         "description": <concise summary of role responsibilities>,
-         "seniority_level": <junior|mid|senior>,
-         "industry": [<SkillSpec>, ...],
-         "skill_requirements": [<SkillSpec>, ...] # max 10 items
-       }
-
-    4. Rules:
-       - For `industry` and `skill_requirements`, return SkillSpec nodes only.
-       - Deduplicate repeated skills or industries.
-       - Include only practical, observable skills from the text.
-       - Ignore company perks, salaries, or boilerplate.
-       - Return **RoleSpec object only**; no explanations, no extra text.
-       - Preserve canonical skill names if available.
-
-    5. Goal:
-       - Produce a clean, deterministic RoleSpec that can be persisted in Jac
-         and used for skill matching and dashboard display.
-    """;
+Rules:
+    1. 'name', 'description', and 'seniority_level' MUST be strings at the root of the JSON.
+    2. 'seniority_level' MUST be one of: 'junior', 'mid', or 'senior' (all lowercase).
+    3. 'industry' MUST be a list of 1-3 primary industries.
+    4. 'skill_requirements' MUST be a flat list of SkillSpec objects. 
+       - LIMIT: Extract ONLY the top 8-12 most critical skills.
+       - Prioritize hard technical skills and essential soft skills.
+       - Do not include every single tool mentioned; group them if necessary (e.g., 'Cloud Platforms' instead of listing 10 AWS services).
+    5. DO NOT create nested dictionaries like 'industry: { name: ... }'.
+    6. Return ONLY the RoleSpec object.
+""";
 
 impl extract_and_attach_skills.get_resume_text{
     user_data = here;
@@ -392,26 +363,19 @@ impl compute_match_score.extract_missing_skills{
         "missing_skills": missing_skills};
     }
 sem compute_match_score.get_matched_skills = """
-    1. Input:
-       - user_skills: list of user's skills (strings)
-       - required_skills: list of skills required for the target role (strings)
-
-    2. Task:
-       - Use **semantic similarity** to compare user_skills with required_skills.
-       - Identify which required skills are **already matched** by the user's skills.
-       - You may call `extract_matching_skills(user_skills, required_skills)` to assist.
-
-    3. Output:
-       - Return a dictionary with:
-         {
-             "number_of_matching_skills": int,  # count of matched skills
-             "matching_skills": list[str]       # list of matched skills
-         }
-       - Do not include explanations or extra text.
-       - Only include semantically relevant matches.
-
-    4. Goal:
-       - Provide structured data for computing the overall match score and for dashboard display.
+    Task: Identify which 'required_skills' are satisfied by 'user_skills'.
+    Rules:
+    1. Use semantic similarity (e.g., 'React' satisfies 'Frontend Frameworks').
+    2. STRICT: 'matching_skills' must contain ONLY verbatim strings from the 'required_skills' input.
+    3. No hallucinations: If a user skill isn't in 'required_skills', ignore it.
+    4. Output: Return a MatchResult object. 'number_of_matching_skills' must be len(matching_skills).
+""";
+sem compute_match_score.get_missing_skills = """
+    Task: Identify which 'required_skills' are NOT covered by 'user_skills'.
+    Rules:
+    1. A skill is missing only if no 'user_skills' are semantically equivalent.
+    2. STRICT: 'missing_skills' must contain ONLY verbatim strings from the 'required_skills' input.
+    3. Output: Return a MissingSkillResult object. 'number_of_missing_skills' must be len(missing_skills).
 """;
 impl compute_match_score.calculate_score{
     user_data = here;
@@ -419,20 +383,22 @@ impl compute_match_score.calculate_score{
     # Normalize skill names
     user_skills = [s["name"].lower().strip() for s in self.user_data.get_skills()];
     required_skills = [
-        s["canonical_name"].lower().strip() if s["canonical_name"] != "" else s["name"].lower().strip()
-        for s in self.target_role.skill_requirements
-    ];
+    s.canonical_name.lower().strip() if s.canonical_name != "" else s.name.lower().strip()
+    for s in self.target_role.skill_requirements];
 
     # Compute matched and missing skills once
     matched_result = self.get_matched_skills(user_skills=user_skills, required_skills=required_skills);
     missing_result = self.get_missing_skills(user_skills=user_skills, required_skills=required_skills);
 
-    matched_skills = matched_result["matching_skills"];
-    missing_skills = missing_result["missing_skills"];
+    self.matched_skills = list(set(matched_result.matching_skills));
+    self.missing_skills = list(set(missing_result.missing_skills));
 
     # Compute score (0–100%)
-    score_value = float(len(matched_skills)) / max(len(required_skills), 1);
-    score_percentage = score_value * 100.0;
+    num_matched = len(self.matched_skills);
+    num_required = max(len(required_skills), 1);
+    
+    self.score_value = float(min(num_matched, num_required)) / float(num_required);
+    score_percentage = self.score_value * 100.0;
 
     # Provide explanation based on percentage
     explanation = "";
@@ -445,13 +411,13 @@ impl compute_match_score.calculate_score{
     } else {
         explanation = "You're just getting started. Consider building foundational skills to better align with this role.";
     }
-
+    self.explanation = explanation;
     # Create MatchScore node and attach to user
     match_node = MatchScore(
-        score_value=score_value,
-        matched_skills=matched_skills,
-        missing_skills=missing_skills,
-        explanation=explanation
+        score_value=self.score_value,
+        matched_skills=self.matched_skills,
+        missing_skills=self.missing_skills,
+        explanation=self.explanation
     );
 
     user_data ++> match_node;
@@ -464,25 +430,3 @@ impl compute_match_score.calculate_score{
         "explanation": match_node.explanation
     };
 }
-sem compute_match_score.get_missing_skills = """
-1. Input:
-       - user_skills: list of user's skills (strings)
-       - required_skills: list of skills required for the target role (strings)
-
-    2. Task:
-       - Use **semantic similarity** to compare user_skills with required_skills.
-       - Identify which required skills are **missing** from the user's skill set.
-       - You may call `extract_missing_skills(user_skills, required_skills)` to assist.
-
-    3. Output:
-       - Return a dictionary with:
-         {
-             "number_of_missing_skills": int,  # count of missing skills
-             "missing_skills": list[str]       # list of missing skills
-         }
-       - Do not include explanations or extra text.
-       - Only include semantically relevant missing skills.
-
-    4. Goal:
-       - Provide structured data for computing the overall match score and for dashboard display.
-""";

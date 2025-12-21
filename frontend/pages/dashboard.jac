@@ -1,87 +1,172 @@
 cl import from react { useState, useEffect }
-cl import from ...components.layout.Header { Header }
-cl import from ..components.dashboard.dashboard_header {DashboardHeader}
-cl import from ..components.dashboard.dashboard_sidebar { DashboardSidebar }
-cl import from ..components.dashboard.dashboard_info_panel { DashboardInfoPanel }
+cl import from "@jac-client/utils" { jacLogout, jacIsLoggedIn, Navigate}
 
 cl {
     def DashboardPage() -> any {
+          if not jacIsLoggedIn() {
+            return <Navigate to="/login" />;
+        }
         [dashboardData, setDashboardData] = useState(None);
         [loading, setLoading] = useState(true);
 
-        # Load dashboard data from Jac walker
+        # ------------------------------
+        # Fetch Dashboard Data Safely
+        # ------------------------------
         useEffect(lambda -> None {
+            cancelled = false;
+
             async def fetchData() -> None {
                 result = await root spawn get_dashboard_data();
                 console.log(result);
-                if result.reports and len(result.reports) > 0{
-                    setDashboardData(result.reports[0]);
+                if cancelled {
+                    return;
                 }
-                setLoading(false);
+
+                if result.reports and result.reports.length > 0 {
+                    dashboard = result.reports[0];
+
+                    if dashboard and dashboard["success"] and not cancelled {
+                        setDashboardData(dashboard);
+                    }
+                }
+
+                if not cancelled {
+                    setLoading(false);
+                }
             }
+
             fetchData();
+
+            return lambda -> None {
+                cancelled = true;
+            };
         }, []);
 
+        # ------------------------------
+        # Loading / Error States
+        # ------------------------------
         if loading {
             return <div className="flex justify-center items-center h-screen">
-                <p className="text-gray-600">Loading Dashboard...</p>
+                <p className="text-gray-600 text-lg animate-pulse">Loading Dashboard...</p>
             </div>;
         }
 
         if not dashboardData or not dashboardData["success"] {
             return <div className="flex justify-center items-center h-screen">
-                <p className="text-red-500">
-                    {dashboardData["error"] if dashboardData else "Failed to load dashboard."}
+                <p className="text-error-500 text-lg font-semibold">
+                    Failed to load dashboard.
                 </p>
             </div>;
         }
 
+        # ------------------------------
+        # Extract Data Safely
+        # ------------------------------
         user_email = dashboardData["user_email"];
         target_role = dashboardData["target_role"];
-        skills_count = len(dashboardData["skills"]);
-        match_score = dashboardData["match_score"]["score_value"];
-        matched_skills = len(dashboardData["match_score"]["matched_skills"]);
-        missing_skills = len(dashboardData["match_score"]["missing_skills"]);
-        avg_level = dashboardData.get("avg_level", "Intermediate");
-        readiness = dashboardData.get("readiness", "Good");
+        skills = dashboardData["skills"] or [];
+        skills_count = skills.length;
 
-        return <DashboardLayout>
-            # Sidebar
-            <DashboardSidebar
-                user_email={user_email}
-                skills_count={skills_count}
-                target_role={target_role}
-            />
+        matched_skills_list = dashboardData["matched_skills"] or [];
+        missing_skills_list = dashboardData["missing_skills"] or [];
+        matched_skills_count = dashboardData["matched_skills_count"];
+        missing_skills_count = dashboardData["missing_skills_count"];
 
-            # Main Content
-            <main className="flex-1 overflow-y-auto p-6">
-                <h1 className="section-heading text-gradient">
-                    Welcome, {user_email}
-                </h1>
-                <p className="text-gray-600 mb-6">
-                    Here's a quick overview of your skills, role fit, and learning progress.
-                </p>
+        match_score = dashboardData["match_score"];
+        role_fit_percent = Math.round(match_score * 100);
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <MetricCard label="Matched Skills" value={matched_skills.toString()} />
-                    <MetricCard label="Missing Skills" value={missing_skills.toString()} />
-                    <MetricCard label="Role Fit %" value={f"{match_score:.1f}"} />
-                </div>
+        resume_summary = dashboardData["resume_summary"];
+        job_postings = dashboardData["job_postings"] or [];
 
-                <div className="mt-6 card">
-                    <h2 className="font-semibold mb-2">Resume Summary</h2>
-                    <p className="text-sm text-gray-600">
-                        {dashboardData["resume_summary"]}
-                    </p>
-                </div>
-            </main>
-            <DashboardInfoPanel
-                match_score={match_score}
-                matched_skills={matched_skills}
-                missing_skills={missing_skills}
-                avg_level={avg_level}
-                readiness={readiness}
-            />
-        </DashboardLayout>;
+        # ------------------------------
+        # Render Dashboard
+        # ------------------------------
+        return <div className="min-h-screen bg-gray-50 font-sans p-6">
+
+           # --- Header ---
+<header className="header fade-in mb-6">
+    <div className="header-inner flex justify-between items-center">
+        <div>
+            <h1 className="logo-title">SkillAtlas Dashboard</h1>
+            <p className="logo-subtitle">Your career insights at a glance</p>
+        </div>
+
+        # Logout Button
+        <button
+            className="nav-button nav-button-logout px-4 py-2 rounded text-white bg-cyan-500 hover:bg-cyan-600 transition"
+            onClick={lambda -> None { jacLogout(); }}
+        >
+            Logout
+        </button>
+    </div>
+</header>
+
+
+            <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
+
+                # --- Sidebar ---
+                <aside className="w-full lg:w-64 card fade-in space-y-3">
+                    <p><b>Email:</b> {user_email}</p>
+                    <p><b>Target Role:</b> {target_role}</p>
+                    <p><b>Total Skills:</b> {skills_count}</p>
+
+                    # Optional Skills List (scrollable)
+                    <div className="mt-4 max-h-60 overflow-y-auto border-t border-gray-200 pt-2">
+                        <h4 className="text-sm font-semibold text-gray-600 mb-2">Skills</h4>
+                        {skills.map(lambda skill: any -> any {
+                            return <span className="inline-block bg-primary-500 text-white text-xs px-2 py-1 rounded mr-1 mb-1">
+                                {skill["name"]}
+                            </span>;
+                        })}
+                    </div>
+                </aside>
+
+                # --- Main Content ---
+                <main className="flex-1 space-y-6">
+
+                    # Welcome
+                    <h2 className="section-heading text-gradient fade-in">
+                        Welcome, {user_email}
+                    </h2>
+
+                    # Metrics
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="card text-center fade-in hover:scale-105 transition-transform duration-300">
+                            <p className="text-gray-600 font-medium">Matched Skills</p>
+                            <p className="text-2xl font-bold text-success-500">{matched_skills_count}</p>
+                        </div>
+                        <div className="card text-center fade-in hover:scale-105 transition-transform duration-300">
+                            <p className="text-gray-600 font-medium">Missing Skills</p>
+                            <p className="text-2xl font-bold text-error-500">{missing_skills_count}</p>
+                        </div>
+                        <div className="card text-center fade-in hover:scale-105 transition-transform duration-300">
+                            <p className="text-gray-600 font-medium">Role Fit %</p>
+                            <p className="text-2xl font-bold text-primary-500">{role_fit_percent}</p>
+                        </div>
+                    </div>
+
+                    # Resume
+                    <div className="card fade-in">
+                        <h3 className="font-semibold mb-2 text-gray-800">Resume Summary</h3>
+                        <p className="text-sm text-gray-600">{resume_summary}</p>
+                    </div>
+
+                    # Job Opportunities
+                    <div className="card fade-in">
+                        <h3 className="font-semibold mb-4 text-gray-800">Job Opportunities</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {job_postings.map(lambda job: any -> any {
+                                return <div className="card border border-gray-200 hover:shadow-lg transition-shadow p-4 fade-in">
+                                    <p className="font-semibold text-primary-500">{job["title"]}</p>
+                                    <p className="text-sm text-gray-600">{job["company"]}</p>
+                                    <p className="text-xs text-gray-500">{job["location"]}</p>
+                                </div>;
+                            })}
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>;
     }
 }
