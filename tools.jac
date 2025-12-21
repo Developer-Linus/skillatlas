@@ -3,6 +3,9 @@ import requests;
 import logging;
 import from hashlib { md5 }
 import from firecrawl { Firecrawl }
+import from byllm.lib { Model }
+
+glob llm = Model(model_name="mistral/mistral-small-latest", verbose=False);
 
 obj WebSearch {
     has api_key: str = os.getenv("SCRAPINGDOG_API_KEY");
@@ -105,47 +108,65 @@ obj WebSearch {
     def fetch_learning_resources(
         target_role: str, missing_skills: list[str], limit: int = 5
     ) -> list {
-        if not target_role or missing_skills.length == 0 {
+        if not target_role or len(missing_skills) == 0 {
             return [];
         }
+        """
+        You are an expert learning architect.
 
-        skills_text = "";
-        for skill in missing_skills {
-            if skills_text == "" {
-                skills_text = skill;
-            } else {
-                skills_text = skills_text + ", " + skill;
-            }
-        }
+        Generate ONE concise web search query to find structured ONLINE COURSES
+        (not articles, blogs, or forum posts) for becoming a {target_role}.
 
-        query = "best structured learning roadmap to become " + target_role + " covering skills such as " + skills_text;
+        Rules:
+        - Include ONLY the top 5 missing skills
+        - MUST include words: course OR specialization OR certification
+        - Prefer platforms: Coursera, Udemy, edX, Pluralsight
+        - Exclude blogs, Reddit, Medium, LinkedIn
+        - Max 18 words
+        - Return ONLY the query string
 
+        Good example:
+        "Data Analyst advanced SQL data governance certification Coursera Udemy"
+    """;
+        def build_firecrawl_query(target_role: str, missing_skills: list[str]) -> str by llm();
+        query = build_firecrawl_query(target_role, missing_skills);
+
+        # -----------------------------
+        # Perform Firecrawl search
+        # -----------------------------
         firecrawl = Firecrawl(api_key=self.firecrawl_api_key);
 
-        result = None;
         try {
-            result = firecrawl.search(query=query, limit=limit);
+            results = firecrawl.search(query=query, sources=["web"], limit=limit);
         } except Exception as e {
+            print("Firecrawl search failed:", e);
             return [];
         }
 
-        if not result or not result["success"] {
+        # -----------------------------
+        # -----------------------------
+        # Validate results
+        # Validate results
+        # -----------------------------
+        # -----------------------------
+        if not hasattr(results, "web") or not results.web {
+            print("No web results found from Firecrawl");
             return [];
         }
 
-        web_results = result["data"]["web"];
-        if not web_results or not isinstance(web_results, list) {
-            return [];
-        }
-
+        # -----------------------------
+        # -----------------------------
+        # Transform results to Jac-friendly format
+        # Transform results to Jac-friendly format
+        # -----------------------------
+        # -----------------------------
         resources = [];
-
-        for r in web_results {
+        for r in results.web {
             resources.append(
                 {
-                    "title": r["title"] or "",
-                    "url": r["url"] or "",
-                    "description": r["description"] or "",
+                    "title": getattr(r, "title"),
+                    "url": getattr(r, "url"),
+                    "description": getattr(r, "description"),
                     "provider": "Web"
                 }
             );
