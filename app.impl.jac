@@ -430,3 +430,98 @@ impl compute_match_score.calculate_score{
         "explanation": match_node.explanation
     };
 }
+
+impl get_dashboard_data.start{
+    visit [-->(`?UserData)];
+    }
+impl get_dashboard_data.collect{
+        user_data = here;
+
+        # 1. Check if user exists
+        if not user_data {
+            report {
+                "success": False,
+                "redirect": "login",
+                "error": "UserData not found"
+            } ;
+            disengage;
+        }
+
+        # 2. Check target role
+        target_role_name = user_data.get_target_role();
+        if not target_role_name {
+            report {
+                "success": False,
+                "redirect": "onboarding",
+                "error": "Target role not set"
+            } ;
+            disengage;
+        }
+
+        # 3. Collect job postings (only if missing)
+        jobs = [user_data-->(`?JobPosting)];
+        if len(jobs) == 0 {
+            root spawn collect_job_postings(target_role=target_role_name);
+            jobs = [user_data-->(`?JobPosting)];
+        }
+
+        # 4. Collect or create Role node
+        role_nodes = [user_data-->(`?Role:name==target_role_name)];
+        role_node = None;
+
+        if len(role_nodes) > 0 {
+            role_node = role_nodes[0];
+        } else {
+            # Create role if missing
+            root spawn extract_target_role_requirements(target_role=target_role_name);
+            role_nodes = [user_data-->(`?Role:name==target_role_name)];
+            role_node = role_nodes[0];
+        }
+
+        # 5. Collect or compute MatchScore
+        match_nodes = [user_data-->(`?MatchScore)];
+        match_result = None;
+        if len(match_nodes) > 0 {
+            match_result = match_nodes[0];
+        } else {
+            # Compute MatchScore if it doesn’t exist
+            match_result = user_data spawn compute_match_score(
+                target_role=role_node, user_data=user_data
+            );
+        }
+
+        # 6. Gather user skills and resume summary
+        skills = user_data.get_skills() or [];
+        resume_summary = user_data.resume_summary or "";
+
+        # 7. Compute dashboard metrics safely
+        total_skills = len(skills);
+        matched_skills_count = len(match_result.matched_skills or []);
+        missing_skills_count = len(match_result.missing_skills or []);
+        match_score = match_result.score_value or 0.0;
+
+        # 8. Report all dashboard data
+        report {
+            "success": True,
+            "user_email": user_data.email,
+            "target_role": role_node.name,
+            "role_description": role_node.description or "",
+            "skills": skills,
+            "resume_summary": resume_summary,
+            "match_score": match_score,
+            "match_explanation": match_result.explanation or "",
+            "matched_skills": match_result.matched_skills or [],
+            "missing_skills": match_result.missing_skills or [],
+            "total_skills": total_skills,
+            "matched_skills_count": matched_skills_count,
+            "missing_skills_count": missing_skills_count,
+            "job_postings": [
+                {
+                    "title": j.title,
+                    "company": j.company,
+                    "location": j.location,
+                    "posted_at": j.posted_at
+                } for j in jobs
+            ]
+        } ;
+    }

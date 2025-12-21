@@ -2,10 +2,12 @@ import os;
 import requests;
 import logging;
 import from hashlib { md5 }
+import from firecrawl { Firecrawl }
 
 obj WebSearch {
     has api_key: str = os.getenv("SCRAPINGDOG_API_KEY");
     has base_url: str = "https://api.scrapingdog.com/google_jobs";
+    has firecrawl_api_key: str = os.getenv("FIRECRAWL_API_KEY");
 
     """
     Fetch raw job postings for a given role in Kenya.
@@ -98,5 +100,57 @@ obj WebSearch {
         }
 
         return job_nodes;
+    }
+
+    def fetch_learning_resources(
+        target_role: str, missing_skills: list[str], limit: int = 5
+    ) -> list {
+        if not target_role or missing_skills.length == 0 {
+            return [];
+        }
+
+        skills_text = "";
+        for skill in missing_skills {
+            if skills_text == "" {
+                skills_text = skill;
+            } else {
+                skills_text = skills_text + ", " + skill;
+            }
+        }
+
+        query = "best structured learning roadmap to become " + target_role + " covering skills such as " + skills_text;
+
+        firecrawl = Firecrawl(api_key=self.firecrawl_api_key);
+
+        result = None;
+        try {
+            result = firecrawl.search(query=query, limit=limit);
+        } except Exception as e {
+            return [];
+        }
+
+        if not result or not result["success"] {
+            return [];
+        }
+
+        web_results = result["data"]["web"];
+        if not web_results or not isinstance(web_results, list) {
+            return [];
+        }
+
+        resources = [];
+
+        for r in web_results {
+            resources.append(
+                {
+                    "title": r["title"] or "",
+                    "url": r["url"] or "",
+                    "description": r["description"] or "",
+                    "provider": "Web"
+                }
+            );
+        }
+
+        return resources;
     }
 }

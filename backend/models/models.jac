@@ -3,6 +3,7 @@ import from backend.utils.current_time { get_current_time }
 enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
+enum LearningPriority { HIGH = "high", MEDIUM = "Medium", LOW = "low" }
 
 node UserData {
     has email: str;
@@ -32,10 +33,12 @@ node UserData {
         method="ReAct", tools=([self.get_profile_snapshot])
     );
 }
+
 obj MatchResult {
     has number_of_matching_skills: int;
     has matching_skills: list[str];
 }
+
 obj MissingSkillsResult {
     has number_of_missing_skills: int;
     has missing_skills: list[str];
@@ -110,10 +113,10 @@ node Trend {
 }
 
 node LearningPath {
-    has name: str;
-    has steps: list[str];
-    has goal_role: str;
-    has estimated_time: str;
+    has target_role: str;
+    has missing_skills: list[str];
+    has phases: list[dict];
+    has resources: list[dict];
 }
 
 node MatchScore {
