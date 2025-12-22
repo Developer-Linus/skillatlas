@@ -67,7 +67,7 @@ button {
 
     /* Header / Navbar */
     .header {
-        @apply w-full shadow-md bg-gray-50;
+        @apply bg-gradient-to-r from-blue-50 via-white to-teal-50;
     }
 
     .header-inner {
@@ -111,7 +111,7 @@ button {
 
     /* Cards / Sections */
     .card {
-        @apply bg-white rounded-lg shadow-md p-4;
+        @apply bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-300;
     }
 
     /* Form Inputs */
@@ -131,6 +131,53 @@ button {
     .section-subheading {
         @apply text-lg text-gray-600 mb-2;
     }
+        /* Timeline */
+        .timeline {
+            @apply relative border-l-2 border-blue-200 pl-8 space-y-8;
+        }
+    
+        .timeline-dot {
+            @apply absolute -left-[11px] top-4 w-5 h-5 rounded-full border-4 border-white;
+        }
+    
+        .timeline-dot-active {
+            @apply bg-blue-600 shadow-lg shadow-blue-400/40;
+        }
+    
+        .timeline-dot-inactive {
+            @apply bg-gray-300;
+        }
+    
+        /* Phase Card */
+        .phase-card {
+            @apply p-5 rounded-xl border bg-white transition-all;
+        }
+    
+        .phase-card-active {
+            @apply border-blue-300 bg-gradient-to-br from-blue-50 to-white shadow-lg;
+        }
+    
+        .phase-card-locked {
+            @apply border-gray-200 opacity-70;
+        }
+    
+        /* Skill Pills */
+        .skill-pill {
+            @apply text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700;
+        }
+    
+        /* Phase Badge */
+        .phase-badge {
+            @apply text-xs font-semibold px-2 py-1 rounded-full;
+        }
+    
+        .phase-badge-active {
+            @apply bg-blue-100 text-blue-700;
+        }
+    
+        .phase-badge-locked {
+            @apply bg-gray-100 text-gray-400;
+        }
 }
 @utility text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-teal-400 to-cyan-400;
