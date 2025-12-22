@@ -3,7 +3,6 @@ import from backend.utils.current_time { get_current_time }
 enum UserRole { ADMIN = "admin", USER = "user" }
 
 enum SeniorityLevel { JUNIOR = "junior", MID = "mid", SENIOR = "senior" }
-enum LearningPriority { HIGH = "high", MEDIUM = "Medium", LOW = "low" }
 
 node UserData {
     has email: str;
@@ -73,14 +72,6 @@ node Role {
     has skill_requirements: list[Skill] = [];
 }
 
-node Course {
-    has title: str;
-    has provider: str;
-    has skills_taught: list[str];
-    has duration: str;
-    has course_difficulty: str;
-}
-
 node JobPosting {
     has job_uid: str;
     has title: str;
@@ -94,22 +85,9 @@ node JobPosting {
     has apply_links: list = [];
 }
 
-node Certification {
-    has name: str;
-    has issurer: str;
-    has skills_tested: str;
-    has level: str;
-}
-
 node SkillGap {
     has skill_name: str;
     has severity: int;
-}
-
-node Trend {
-    has topic: str;
-    has affected_skills: list[str];
-    has affected_roles: list[str];
 }
 
 node LearningPhase {
@@ -131,8 +109,4 @@ node MatchScore {
     has matched_skills: list[str];
     has missing_skills: list[str];
     has explanation: str;
-}
-
-node Seniority {
-    has level: SeniorityLevel;
 }

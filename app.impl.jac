@@ -470,22 +470,24 @@ impl get_dashboard_data.collect{
             target_role=role_node, user_data=user_data
         );
     }
-    learning_path_data = None;
-    learning_paths = [user_data-->(`?LearningPath)];
-    learning_path = None;
-    if len(learning_paths) > 0 {
-        learning_path = learning_paths[0];
-    } elif match_result.missing_skills and len(match_result.missing_skills) > 0 {
-        learning_path = root spawn recommend_learning_path(
-            target_role=target_role_name, missing_skills=match_result.missing_skills
-        );
-    }
     skills = user_data.get_skills() or [];
     resume_summary = user_data.resume_summary or "";
     total_skills = len(skills);
     matched_skills_count = len(match_result.matched_skills or []);
     missing_skills_count = len(match_result.missing_skills or []);
     match_score = match_result.score_value or 0.0;
+    learning_path_data = None;
+    learning_paths = [user_data-->(`?LearningPath)];
+    learning_path_data = None;
+    learning_paths = [user_data-->(`?LearningPath)];
+    if len(learning_paths) == 0
+    and match_result.missing_skills
+    and len(match_result.missing_skills) > 0 {
+        lp = root spawn recommend_learning_path(
+            target_role=role_node.name, missing_skills=match_result.missing_skills
+        );
+        learning_paths = [lp];
+    }
     if len(learning_paths) > 0 {
         lp = learning_paths[0];
         phases_summary = [
@@ -497,8 +499,7 @@ impl get_dashboard_data.collect{
             } for phase in lp.phases
         ];
         resources_summary = [
-            {"title": r["title"], "url": r["url"], "provider": r["provider"]}
-            for r in lp.resources
+            {"title": r["title"], "url": r["url"]} for r in lp.resources
         ];
         learning_path_data = {
             "target_role": lp.target_role,
@@ -584,7 +585,6 @@ impl recommend_learning_path.fetch_and_attach_learning_path{
         phases=phases,
         resources=resources
     );
-    print(learning_path);
     user_data ++> learning_path;
     report {
         "target_role": self.target_role,

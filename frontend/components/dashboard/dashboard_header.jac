@@ -1,3 +1,4 @@
+cl import from "@jac-client/utils" { jacLogout }
 cl {
     def DashboardHeader(props: any) -> any {
         def handle_logout()  -> None {

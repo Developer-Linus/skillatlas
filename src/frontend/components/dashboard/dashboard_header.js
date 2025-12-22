@@ -1,4 +1,5 @@
 import {__jacJsx, __jacSpawn} from "@jac-client/utils";
+import { jacLogout } from "@jac-client/utils";
 function DashboardHeader(props) {
   function handle_logout() {
     jacLogout();

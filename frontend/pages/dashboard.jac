@@ -68,7 +68,15 @@ cl {
         learning_path = dashboardData["learning_path"];
         role_description = dashboardData["role_description"];
 
-        return <div className="min-h-screen bg-gray-50 font-sans p-6">
+        return <div
+            className="min-h-screen bg-gray-50 font-sans p-6"
+            style={{
+                "backgroundImage": "linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.78)), url(/static/assets/dashboard.jpg)",
+                "backgroundSize": "auto 100%",
+                "backgroundPosition": "center",
+                "backgroundRepeat": "no-repeat"
+            }}
+        >
             <DashboardHeader />
             <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto">
                 <DashboardSidebar
