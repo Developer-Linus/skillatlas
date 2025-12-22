@@ -129,11 +129,8 @@ obj WebSearch {
         "Data Analyst advanced SQL data governance certification Coursera Udemy"
     """;
         def build_firecrawl_query(target_role: str, missing_skills: list[str]) -> str by llm();
-        query = build_firecrawl_query(target_role, missing_skills);
 
-        # -----------------------------
-        # Perform Firecrawl search
-        # -----------------------------
+        query = build_firecrawl_query(target_role, missing_skills);
         firecrawl = Firecrawl(api_key=self.firecrawl_api_key);
 
         try {
@@ -143,23 +140,10 @@ obj WebSearch {
             return [];
         }
 
-        # -----------------------------
-        # -----------------------------
-        # Validate results
-        # Validate results
-        # -----------------------------
-        # -----------------------------
         if not hasattr(results, "web") or not results.web {
             print("No web results found from Firecrawl");
             return [];
         }
-
-        # -----------------------------
-        # -----------------------------
-        # Transform results to Jac-friendly format
-        # Transform results to Jac-friendly format
-        # -----------------------------
-        # -----------------------------
         resources = [];
         for r in results.web {
             resources.append(

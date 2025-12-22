@@ -22,6 +22,35 @@ He knew he was capable. Professors and mentors had praised his projects, and his
 Scrolling late at night, Kimani stumbled upon SkillAtlas. The platform analyzed his existing skills, compared them with his target roles, and highlighted gaps with actionable recommendations. He saw, for the first time, a clear path from “what I have” to “what I need”. SkillAtlas didn’t just tell him he was lacking; it showed him how to bridge the gap, step by step.
 
 Relief washed over him. For the first time, he felt guided, supported, and hopeful. The anxiety of career uncertainty lifted as he realized he wasn’t lost—he just needed the right map. With a concrete plan in hand, Kimani enrolled in targeted courses, sharpened his portfolio, and soon landed his first role as a junior data engineer, confident that this was only the beginning.
+## System Architecture
+
+![System Architecture](system_architecture.png)
+
+SkillAtlas is built as a **graph-based, AI-native platform** using Jac. The system is designed to analyze user skills, identify gaps, and recommend personalized learning paths and job opportunities.
+
+### **Core Components**
+
+* **Frontend (Dashboard / Web UI):**
+  Users upload CVs, view match scores, skill gaps, recommended learning resources, and relevant job listings.
+
+* **Jac Backend / Graph Engine:**
+
+  * **UserData Node:** Stores user CVs, skills, and target roles.
+  * **Skill & Role Graph:** Models relationships between skills, roles, and learning resources.
+  * **Walkers (AI Agents):** Traverse the graph to compute match scores, identify gaps, and fetch relevant recommendations.
+
+* **External APIs / Tools:**
+  Integrates with learning resources (FireCrawl, ScrapeDog) and job listings to populate dashboards with actionable data.
+
+### **Data Flow**
+
+1. User uploads CV → Frontend sends to Jac Backend.
+2. Backend parses CV → updates UserData node → builds graph.
+3. Walkers traverse graph → compute match scores and missing skills.
+4. Backend fetches learning resources and job opportunities → returns all data to Frontend.
+
+> The architecture emphasizes **clarity, explainability, and rapid reasoning over skill–role relationships** using AI-native graph traversal.
+
 
 ## Key Features
 
