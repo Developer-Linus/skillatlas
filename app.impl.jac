@@ -471,19 +471,15 @@ impl get_dashboard_data.collect{
         );
     }
     learning_path_data = None;
-learning_paths = [user_data-->(`?LearningPath)];
-learning_path = None;
-
-if len(learning_paths) > 0 {
-    # Use existing learning path
-    learning_path = learning_paths[0];
-} elif match_result.missing_skills and len(match_result.missing_skills) > 0 {
-    # No existing path, generate a new one
-    learning_path = root spawn recommend_learning_path(
-        target_role=target_role_name,
-        missing_skills=match_result.missing_skills
-    );
-}
+    learning_paths = [user_data-->(`?LearningPath)];
+    learning_path = None;
+    if len(learning_paths) > 0 {
+        learning_path = learning_paths[0];
+    } elif match_result.missing_skills and len(match_result.missing_skills) > 0 {
+        learning_path = root spawn recommend_learning_path(
+            target_role=target_role_name, missing_skills=match_result.missing_skills
+        );
+    }
     skills = user_data.get_skills() or [];
     resume_summary = user_data.resume_summary or "";
     total_skills = len(skills);
@@ -491,38 +487,28 @@ if len(learning_paths) > 0 {
     missing_skills_count = len(match_result.missing_skills or []);
     match_score = match_result.score_value or 0.0;
     if len(learning_paths) > 0 {
-    lp = learning_paths[0];
-
-    # Summarize phases
-    phases_summary = [
-        {
-            "phase_title": phase.phase_name,
-            "skills_targeted": phase.skills,
-            "estimated_time": phase.estimated_time,
-            "resources_count": len(phase.resources)
-        }
-        for phase in lp.phases
-    ];
-
-    # Summarize all resources
-    resources_summary = [
-        {
-            "title": r["title"],
-            "url": r["url"],
-            "provider": r["provider"]
-        }
-        for r in lp.resources
-    ];
-
-    learning_path_data = {
-        "target_role": lp.target_role,
-        "missing_skills": lp.missing_skills,
-        "phases": phases_summary,
-        "resources": resources_summary,
-        "total_phases": len(phases_summary),
-        "total_resources": len(resources_summary)
-    };
-}
+        lp = learning_paths[0];
+        phases_summary = [
+            {
+                "phase_title": phase.phase_name,
+                "skills_targeted": phase.skills,
+                "estimated_time": phase.estimated_time,
+                "resources_count": len(phase.resources)
+            } for phase in lp.phases
+        ];
+        resources_summary = [
+            {"title": r["title"], "url": r["url"], "provider": r["provider"]}
+            for r in lp.resources
+        ];
+        learning_path_data = {
+            "target_role": lp.target_role,
+            "missing_skills": lp.missing_skills,
+            "phases": phases_summary,
+            "resources": resources_summary,
+            "total_phases": len(phases_summary),
+            "total_resources": len(resources_summary)
+        };
+    }
     report {
         "success": True,
         "user_email": user_data.email,
@@ -577,27 +563,21 @@ impl recommend_learning_path.start{
     visit [-->user_data];
 }
 
-impl recommend_learning_path.fetch_and_attach_learning_path {
+impl recommend_learning_path.fetch_and_attach_learning_path{
     user_data = here;
-
-    # 1. Fetch learning resources using Firecrawl
     web = WebSearch();
-    resources = web.fetch_learning_resources(self.target_role, self.missing_skills, limit=10);
-
+    resources = web.fetch_learning_resources(
+        self.target_role, self.missing_skills, limit=10
+    );
     if not resources or len(resources) == 0 {
-        report {"error": "No learning resources found for missing skills"};
+        report {"error": "No learning resources found for missing skills"} ;
         disengage;
     }
-
-    # 2. Build learning phases using LLM
     phases = self.build_learning_phases(self.missing_skills, resources);
-
     if not phases or len(phases) == 0 {
-        report {"error": "Failed to generate learning phases"};
+        report {"error": "Failed to generate learning phases"} ;
         disengage;
     }
-
-    # 3. Create LearningPath node
     learning_path = LearningPath(
         target_role=self.target_role,
         missing_skills=self.missing_skills,
@@ -605,19 +585,14 @@ impl recommend_learning_path.fetch_and_attach_learning_path {
         resources=resources
     );
     print(learning_path);
-
-    # 4. Attach to user
     user_data ++> learning_path;
-
-    # 5. Report summary metrics
     report {
         "target_role": self.target_role,
         "missing_skills_count": len(self.missing_skills),
         "phases_count": len(phases),
         "resources_count": len(resources)
-    };
+    } ;
 }
-
 
 sem recommend_learning_path. build_learning_phases= """
 Generate a structured learning roadmap based on missing skills and resources.

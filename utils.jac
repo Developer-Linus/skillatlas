@@ -4,6 +4,11 @@ import magic;
 import pytesseract;
 import pdf2image;
 import docx;
+import from datetime { datetime }
+def provide_year() {
+    year = datetime.now().year;
+    return year;
+}
 
 # File type detection
 def detect_file_type(file_bytes: bytes) -> str {

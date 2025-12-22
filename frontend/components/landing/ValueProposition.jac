@@ -1,7 +1,10 @@
 cl import from react { useState }
+cl import from "@jac-client/utils" { jacIsLoggedIn }
 
 cl {
     def ValueProposition()  -> any {
+        show_signup_button = not jacIsLoggedIn();
+
         return <section className="bg-white py-16 px-4 sm:py-20 sm:px-6">
             <div className="max-w-5xl mx-auto text-center flex flex-col gap-6">
                 <h2 className="section-heading text-3xl sm:text-4xl md:text-5xl text-blue-600 font-bold">
@@ -36,16 +39,17 @@ cl {
                     </li>
                 </ul>
                 <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto font-semibold">
-                    No confusion. No guesswork. Just clarity — backed by data.
+                    No confusion. No guesswork. Just clarity backed by data.
                 </p>
-                <div className="flex justify-center">
+                {show_signup_button
+                and <div className="flex justify-center">
                     <a
                         href="/signup"
                         className="px-8 py-3 font-semibold rounded-full text-white text-lg bg-blue-600 border-2 border-transparent hover:border-cyan-400 hover:bg-gradient-to-r from-blue-500 via-teal-400 to-cyan-400 transition-all duration-300 shadow-lg hover:shadow-cyan-400/50"
                     >
                         Get Started
                     </a>
-                </div>
+                </div>}
             </div>
         </section>;
     }

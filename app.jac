@@ -119,11 +119,6 @@ walker compute_match_score {
     can calculate_score with UserData entry;
 }
 
-walker get_dashboard_data {
-    can start with `root entry;
-    can collect with UserData entry;
-}
-
 walker recommend_learning_path {
     has target_role: str;
     has missing_skills: list[str];
@@ -135,6 +130,11 @@ walker recommend_learning_path {
 
     can start with `root entry;
     can fetch_and_attach_learning_path with UserData entry;
+}
+
+walker get_dashboard_data {
+    can start with `root entry;
+    can collect with UserData entry;
 }
 
 with entry {

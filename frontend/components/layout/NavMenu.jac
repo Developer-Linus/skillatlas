@@ -14,12 +14,6 @@ cl {
                         Dashboard
                     </Link>
                     <Link
-                        to="/todos"
-                        className="nav-link text-base font-medium text-blue-600 hover:text-blue-700 transition py-2"
-                    >
-                        Todos
-                    </Link>
-                    <Link
                         to="/learning"
                         className="nav-link text-base font-medium text-blue-600 hover:text-blue-700 transition py-2"
                     >

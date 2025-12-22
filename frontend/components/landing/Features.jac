@@ -27,7 +27,7 @@ cl {
                             Market-Driven Insights
                         </h3>
                         <p className="text-gray-600">
-                            Every recommendation is based on real-time Kenyan job markettrends and emerging technical opportunities.
+                            Every recommendation is based on real-time Kenyan job market trends and emerging technical opportunities.
                         </p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-blue-200 transition">
@@ -38,7 +38,7 @@ cl {
                             Discover Hidden Skills
                         </h3>
                         <p className="text-gray-600">
-                            Upload your CV and instantly uncover skills you didn’t knowyou had — mapped directly to real job roles.
+                            Upload your CV and instantly uncover skills you didn’t know you had — mapped directly to real job roles.
                         </p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-cyan-200 transition">
@@ -49,7 +49,7 @@ cl {
                             Smart Learning Paths
                         </h3>
                         <p className="text-gray-600">
-                            Get auto-generated skill-building roadmaps tailored for theexact job you want.
+                            Get auto-generated skill-building roadmaps tailored for the exact job you want.
                         </p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-blue-200 transition">
@@ -60,7 +60,7 @@ cl {
                             Built for Kenyan Youth
                         </h3>
                         <p className="text-gray-600">
-                            Every insight is localized — no foreign job markets, noirrelevant data. 100% Kenya-focused.
+                            Every insight is localized — no foreign job markets, no irrelevant data. 100% Kenya-focused.
                         </p>
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-cyan-200 transition">
