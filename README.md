@@ -3,14 +3,25 @@
 > SkillAtlas is an AI-powered career development platform that helps individuals identify skill gaps and chart a personalized learning path to achieve their dream job. By analyzing your resume against a target role, SkillAtlas provides a comprehensive match score, highlights missing skills, and recommends curated learning resources and relevant job opportunities.
 
 [**Live Demo (Coming Soon!)**](#) | [**Video Walkthrough**](#)
+---
+## Screenshots
 
+![HomePage](homepage.png)
+_The main landing page of SkillAtlas._
+
+![DashBoard](dashboard.png)
+_The user dashboard, showing the match score, skill gaps, and recommended learning path._
 ---
 
 ## The Problem: Navigating the Modern Career Landscape
 
-In today's fast-evolving job market, many talented individuals struggle to align their existing skills with the requirements of their desired career path. The journey from "what I have" to "what I need" is often unclear, leaving them feeling lost and uncertain. This is especially true for young professionals in emerging economies, who may possess valuable skills but lack the guidance to channel them effectively.
+Kimani had always been passionate about technology. Fresh out of university in Nairobi, he had a solid foundation in data analysis and software development. Yet, despite his skills, he felt stuck. Job postings for data engineers and AI specialists seemed out of reach, and every attempt to map his abilities to these roles left him overwhelmed.
 
-SkillAtlas was born from the desire to bridge this gap, using the power of AI to provide clarity, direction, and a concrete action plan for career growth.
+He knew he was capable. Professors and mentors had praised his projects, and his internship at a local startup had shown him he could handle real-world challenges. But talent alone wasn’t enough.
+
+Scrolling late at night, Kimani stumbled upon SkillAtlas. The platform analyzed his existing skills, compared them with his target roles, and highlighted gaps with actionable recommendations. He saw, for the first time, a clear path from “what I have” to “what I need”. SkillAtlas didn’t just tell him he was lacking; it showed him how to bridge the gap, step by step.
+
+Relief washed over him. For the first time, he felt guided, supported, and hopeful. The anxiety of career uncertainty lifted as he realized he wasn’t lost—he just needed the right map. With a concrete plan in hand, Kimani enrolled in targeted courses, sharpened his portfolio, and soon landed his first role as a junior data engineer, confident that this was only the beginning.
 
 ## Key Features
 
@@ -79,13 +90,7 @@ skillatlas/
 *   **Backend:**
     *   Jac's graph-based backend with a built-in ORM-like system.
 
-## Screenshots
 
-![HomePage](homepage.png)
-_Caption: The main landing page of SkillAtlas._
-
-![DashBoard](dashboard.png)
-_Caption: The user dashboard, showing the match score, skill gaps, and recommended learning path._
 
 ## Getting Started
 
